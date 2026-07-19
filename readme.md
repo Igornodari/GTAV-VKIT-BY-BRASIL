@@ -1,167 +1,127 @@
-# 🎮 VKit - Toolbox v3.0
+<div align="center">
 
-**Advanced GTA V utility suite with firewall control, heist solvers, autoclicker**
+# VKit Toolbox
 
-[![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/) 
-[![Platform](https://img.shields.io/badge/Platform-Windows-lightgrey.svg)](https://www.microsoft.com/windows)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+### Suíte de utilitários para GTA V — firewall control, heist solvers e automações, tudo em um só lugar.
 
-<p align="center">
-<img width="575" height="865" alt="image" src="https://github.com/user-attachments/assets/2c3e3cab-eb50-4fbc-9722-25aa3609bd5b" />
-</p>
----
+[![Python](https://img.shields.io/badge/Python-3.8+-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/downloads/)
+[![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?style=flat-square&logo=windows&logoColor=white)](https://www.microsoft.com/windows)
+[![License](https://img.shields.io/badge/License-MIT-3DA639?style=flat-square)](LICENSE)
+[![Version](https://img.shields.io/badge/Version-v3.3.4-orange?style=flat-square)](#)
 
-## 📋 Table of Contents
+<img width="480" alt="VKit Toolbox overlay" src="https://github.com/user-attachments/assets/2c3e3cab-eb50-4fbc-9722-25aa3609bd5b" />
 
-- [Features](#-features)
-- [Installation](#-installation)
-- [Usage](#-usage)
-- [Hotkeys Reference](#-hotkeys-reference)
-- [Requirements](#-requirements)
-- [Credits](#-credits)
+</div>
 
 ---
 
-## ✨ Features
+Mantido por [Igor Nodari](https://github.com/Igornodari). Comecei este fork para consolidar em um só executável as ferramentas que a comunidade de GTA V vinha usando espalhadas em scripts soltos — firewall toggle, solvers de heist e alguns atalhos que economizam tempo em farm.
 
-### 🔥 Core Features
-- **NO SAVE MODE**: Block/unblock cloud save servers via firewall rules
-- **Overlay System**: Full-screen or mini glowing orb indicator
-- **Auto-hide**: Overlay disappears when GTA V loses focus
-- **Sound Effects**: Audio feedback for state changes
+## O que ele faz
 
-### ⚡ Tools
-- **Fast Autoclicker**
-- **Snack Spammer**: Automated snack consumption (Hold TAB)
-- **Process Killer**: Instant GTA5 process termination
+**Controle de conexão**
+Bloqueia/libera os servidores de cloud save via regra de firewall, com overlay na tela (modo cheio ou orbe minimalista) mostrando o estado atual. O overlay se esconde sozinho quando o GTA V perde o foco.
 
-### 🎰 Heist Solvers (Optional)
-- Casino Fingerprint Solver (F5)
-- Casino Keypad Solver (F6)
-- Cayo Perico Fingerprint Solver (CTRL+F5)
-- Cayo Perico Voltage Solver (CTRL+F6)
+**Automação**
+- Autoclicker rápido
+- Snack spammer (segura TAB para repetir)
+- Anti-AFK
+- Kill instantâneo do processo do GTA5
 
-### 🚀 Exploits (Optional)
-- Job Warp Exploit (CTRL+ALT+J)
+**Heist solvers** *(opcionais)*
+- Fingerprint e teclado do Cassino
+- Fingerprint e voltagem do Cayo Perico
+
+**Exploits** *(opcionais)*
+- Job Warp
+
+Tudo roda por hotkeys globais, configuráveis em [`config.yaml`](config.yaml).
 
 ---
 
-## 📦 Installation
-
-### 1. Clone Repository
-```bash
-git clone https://github.com/ItsCEED/vkit-toolbox
-cd vkit-toolbox
-```
-
-
-### 2. Install Dependencies
+## Instalação
 
 ```bash
+git clone https://github.com/Igornodari/GTAV-VKIT-BY-BRASIL.git
+cd GTAV-VKIT-BY-BRASIL
 pip install -r requirements.txt
 ```
-
-### 3. Run Script
 
 ```bash
 python main.py
 ```
 
-### 3.1 Or Build in to executable 
+> Precisa rodar como **administrador** — as regras de firewall exigem.
+
+### Build de um executável único
 
 ```bash
 python -m nuitka --standalone --onefile --windows-icon-from-ico=icon.ico --windows-uac-admin --enable-plugin=tk-inter --include-data-dir=assets=assets --output-filename=VKit.exe --product-name="GTA V VKit Toolbox" --product-version=1.0.0.0 --file-version=1.0.0.0 --file-description="GTA V VKit" --copyright="2026" --remove-output --assume-yes-for-downloads main.py
 ```
 
-**⚠️ Administrator privileges required for firewall control!**
+Depois é só clicar com o botão direito no `.exe` → **Executar como administrador**.
 
 ---
 
-
-## 🎮 Usage
-
-### Starting the Application
+## Uso básico
 
 ```bash
-python main.py          # Normal mode
-python main.py --debug  # Debug mode (shows keypresses)
+python main.py          # modo normal
+python main.py --debug  # modo debug (mostra as teclas pressionadas)
 ```
-### 🎮 Usage if executable
 
-Right Click > Run As Administrator
-### Basic Workflow
-
-1. **Launch script** → Run as administrator
-2. **Enable NO SAVE** → Press `CTRL+ALT+F9`
-3. **Toggle overlay** → Press `CTRL+ALT+F8` (Full ↔ Mini)
-4. **Use tools** → See hotkeys below
-5. **Disable NO SAVE** → Press `CTRL+ALT+F12`
-6. **Exit** → Press `CTRL+C` in console
+1. Rode como administrador
+2. `CTRL+F9` para ativar o NO SAVE
+3. `CTRL+F8` para alternar o overlay (cheio ↔ mini)
+4. Use as ferramentas pelos hotkeys abaixo
+5. `CTRL+F9` de novo para desativar
+6. `CTRL+C` no console para sair
 
 ---
 
-## ⌨️ Hotkeys Reference
+## Hotkeys
 
-### Core Controls
-
-| Hotkey | Action |
+| Tecla | Ação |
 | :-- | :-- |
-| `CTRL + ALT + F8` | Toggle overlay mode (Full ↔ Mini) |
-| `CTRL +  F8` | Toggle NO SAVE  |
-| `CTRL + SHIFT + D` | Toggle debug mode |
+| `CTRL+F8` | Alterna overlay (cheio ↔ mini) |
+| `CTRL+F9` | Liga/desliga NO SAVE |
+| `CTRL+ALT+SHIFT+D` | Alterna modo debug |
+| `CTRL+K` | Autoclicker |
+| `CTRL+C` | Snack spammer (segurar TAB) |
+| `CTRL+SHIFT+A` | Anti-AFK |
+| `CTRL+SHIFT+Q` | Mata o processo do GTA5 |
+| `CTRL+SHIFT+J` | Job Warp *(se disponível)* |
+| `F5` | Cassino — Fingerprint |
+| `F6` | Cassino — Teclado |
+| `CTRL+F5` | Cayo Perico — Fingerprint |
+| `CTRL+F6` | Cayo Perico — Voltagem |
 
-### Tools
-
-| Hotkey | Action |
-| :-- | :-- |
-| `CTRL + K` | Toggle autoclicker |
-| `CTRL + C` | Toggle snack spammer (Hold TAB) |
-| `CTRL + SHIFT + Q]` | Kill GTA5 process instantly |
-| `CTRL + J` | Job Warp exploit (if available) |
-
-### Heist Solvers
-
-| Hotkey | Action |
-| :-- | :-- |
-| `F5` | Casino Fingerprint Solver |
-| `F6` | Casino Keypad Solver |
-| `CTRL + F5` | Cayo Perico Fingerprint Solver |
-| `CTRL + F6` | Cayo Perico Voltage Solver |
+Todos remapeáveis em [`config.yaml`](config.yaml).
 
 ---
 
+## Aviso
 
+Ferramenta para fins educacionais. Uso por sua conta e risco — bans, corrupção de save ou qualquer efeito colateral são de responsabilidade de quem usa, não minha.
 
-## 🤝 Credits
-
-**Community:** [GTAGlitches Discord](https://discord.gg/rgtaglitches)
-
-### Special Thanks
-- [Crest Companion](https://github.com/Abosmra/Crest-Companion-Tool) for the solvers
-- [ElectroBytezLV](https://www.reddit.com/user/ElectroBytezLV/) for the original nosave ahk.
+**Faça backup dos seus saves antes de usar qualquer modificação.**
 
 ---
 
-## ⚠️ Disclaimer
+## Créditos
 
-**This tool is for educational purposes only.**
-Use at your own risk. The developers are not responsible for:
+- Comunidade [GTAGlitches Discord](https://discord.gg/rgtaglitches)
+- [Crest Companion Tool](https://github.com/Abosmra/Crest-Companion-Tool) — base dos solvers
+- [ElectroBytezLV](https://www.reddit.com/user/ElectroBytezLV/) — script AHK original do nosave
 
-- Account bans or suspensions
-- Game file corruption
-- Unintended side effects
+## Contribuindo
 
-**Always backup your game saves before using any modifications.**
-
----
-
-## 🌟 Support
-
-Found a bug? Have a feature request?
-
-- **Issues**: [GitHub Issues](https://github.com/yourusername/vkit-toolbox/issues)
-- **Discord**: [Join GTAGlitches](https://discord.gg/rgtaglitches)
+Bug ou ideia? Abre uma [issue](https://github.com/Igornodari/GTAV-VKIT-BY-BRASIL/issues) ou manda um PR.
 
 ---
 
-**Made with ❤️ for the GTA V community**
+<div align="center">
+
+Feito por [Igor Nodari](https://github.com/Igornodari) para a comunidade de GTA V.
+
+</div>
