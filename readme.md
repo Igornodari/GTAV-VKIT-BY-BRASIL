@@ -7,7 +7,7 @@
 [![Python](https://img.shields.io/badge/Python-3.8+-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/downloads/)
 [![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?style=flat-square&logo=windows&logoColor=white)](https://www.microsoft.com/windows)
 [![License](https://img.shields.io/badge/License-MIT-3DA639?style=flat-square)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-v3.4.1-orange?style=flat-square)](#)
+[![Version](https://img.shields.io/badge/Version-v3.5.0-orange?style=flat-square)](#)
 
 <img width="480" alt="VKit Toolbox overlay" src="https://github.com/user-attachments/assets/2c3e3cab-eb50-4fbc-9722-25aa3609bd5b" />
 
@@ -118,6 +118,7 @@ python main.py --debug  # modo debug (mostra as teclas pressionadas)
 | `CTRL+ALT+SHIFT+D` | Alterna modo debug |
 | `CTRL+K` | Autoclicker |
 | `CTRL+C` | Snack spammer (segurar TAB) |
+| `CTRL+X` | Usar Colete + Comida (combo rápido) |
 | `CTRL+SHIFT+A` | Anti-AFK |
 | `CTRL+SHIFT+Q` | Mata o processo do GTA5 |
 | `CTRL+SHIFT+J` | Job Warp *(se disponível)* |

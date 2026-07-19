@@ -190,7 +190,34 @@ class SnackSpammer:
             self.stop()
         else:
             self.start()
-            
+
+
+def use_armor_and_snack() -> None:
+    """One-shot combo: hold TAB, select armor then snack, release TAB.
+
+    Unlike SnackSpammer this doesn't loop/spam - armor isn't a stackable
+    consumable, so a single press of each is enough.
+    """
+    if not KEYBOARD_AVAILABLE:
+        console.print(
+            "[red]✗[/red] keyboard module required for Armor + Snack combo",
+            style="red",
+        )
+        return
+
+    try:
+        keyboard.press('tab')
+        time.sleep(0.05)
+        keyboard.press_and_release('v')
+        time.sleep(0.05)
+        keyboard.press_and_release('c')
+        time.sleep(0.05)
+    finally:
+        keyboard.release('tab')
+
+    console.print("🎽 Armor + Snack [bold green]USED[/bold green]", style="green")
+
+
 class AntiAFK:
     """Anti-AFK system - alternates S+A and S+D every 20-30 seconds"""
     

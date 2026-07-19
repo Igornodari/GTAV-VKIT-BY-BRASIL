@@ -32,6 +32,7 @@ HOTKEY_DESCRIPTIONS = [
     (None, None),
     ("autoclicker", "⚡ Toggle Fast Autoclicker (50 CPS)"),
     ("snack_spammer", "🍔 Toggle Snack Spammer (Hold TAB)"),
+    ("armor_snack_combo", "🎽 Usar Colete + Comida (combo rápido)"),
     ("anti_afk", "🎮 Toggle Anti-AFK (S+A ↔ S+D)"),
     ("kill_gta", "💀 Kill GTA5 Process (Instant)"),
     (None, None),

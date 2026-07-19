@@ -15,7 +15,7 @@ from pynput import keyboard
 # Local application imports
 from assets.ui import  OverlayManager
 from assets.settings_window import SettingsWindow
-from tools.autoclicker import AutoClicker, SnackSpammer, AntiAFK
+from tools.autoclicker import AutoClicker, SnackSpammer, AntiAFK, use_armor_and_snack
 from solvers import casinofingerprint, casinokeypad, cayofingerprint, cayovoltage
 from exploits import jobwarp
 
@@ -31,7 +31,7 @@ from core.state import runtime
 from core.logger import console, logger
 
 # Constants
-VERSION = "v3.4.1"
+VERSION = "v3.5.0"
 APP_TITLE = "VKit - Toolbox"
 
 
@@ -89,6 +89,7 @@ class AppConfig:
         fw = config["firewall"]
         hotkeys = config["hotkeys"]
         hotkeys.setdefault("open_settings", "ctrl+f7")
+        hotkeys.setdefault("armor_snack_combo", "ctrl+x")
 
         return cls(
             rule_name=fw["rule_name"],
@@ -136,6 +137,7 @@ class AppConfig:
                 "debug_toggle": "ctrl+alt+shift+d",
                 "kill_gta": "ctrl+shift+q",
                 "open_settings": "ctrl+f7",
+                "armor_snack_combo": "ctrl+x",
                 "casino_fingerprint": "f5",
                 "casino_keypad": "f6",
                 "cayo_fingerprint": "ctrl+f5",
@@ -491,6 +493,7 @@ class HotkeyHandler:
             ),
             "debug_toggle": self._toggle_debug,
             "open_settings": self._toggle_settings_window,
+            "armor_snack_combo": self._use_armor_and_snack,
             "autoclicker": lambda: self._toggle_tool(
                 self.autoclicker, "AUTO CLICKER ⚡"
             ),
@@ -556,6 +559,11 @@ class HotkeyHandler:
         # Tkinter widgets can only be touched from the main/mainloop thread,
         # but this handler runs on the hotkey thread pool - schedule it.
         self.settings_window.request_toggle()
+
+    def _use_armor_and_snack(self):
+        """Quick one-shot combo: use armor then snack (CTRL+X)"""
+        use_armor_and_snack()
+        self.manager.show_notification("COLETE + COMIDA 🎽", "Combo usado", "#82D668")
 
     def _toggle_tool(self, tool, name: str, extra: str = ""):
         """Toggle tool on/off"""
