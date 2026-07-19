@@ -7,7 +7,7 @@
 [![Python](https://img.shields.io/badge/Python-3.8+-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/downloads/)
 [![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?style=flat-square&logo=windows&logoColor=white)](https://www.microsoft.com/windows)
 [![License](https://img.shields.io/badge/License-MIT-3DA639?style=flat-square)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-v3.3.5-orange?style=flat-square)](#)
+[![Version](https://img.shields.io/badge/Version-v3.4.0-orange?style=flat-square)](#)
 
 <img width="480" alt="VKit Toolbox overlay" src="https://github.com/user-attachments/assets/2c3e3cab-eb50-4fbc-9722-25aa3609bd5b" />
 
@@ -114,6 +114,7 @@ python main.py --debug  # modo debug (mostra as teclas pressionadas)
 | :-- | :-- |
 | `CTRL+F8` | Alterna overlay (cheio ↔ mini) |
 | `CTRL+F9` | Liga/desliga NO SAVE |
+| `CTRL+F7` | Abre/fecha o painel de atalhos |
 | `CTRL+ALT+SHIFT+D` | Alterna modo debug |
 | `CTRL+K` | Autoclicker |
 | `CTRL+C` | Snack spammer (segurar TAB) |
@@ -125,7 +126,11 @@ python main.py --debug  # modo debug (mostra as teclas pressionadas)
 | `CTRL+F5` | Cayo Perico — Fingerprint |
 | `CTRL+F6` | Cayo Perico — Voltagem |
 
-Todos remapeáveis em [`config.yaml`](config.yaml).
+Todos remapeáveis em [`config.yaml`](config.yaml) ou pelo painel de atalhos (`CTRL+F7`), sem precisar fechar o jogo.
+
+## Painel de atalhos
+
+`CTRL+F7` abre um painel flutuante (mesmo estilo do overlay) com a lista completa de atalhos. Clique em **Alterar** ao lado de qualquer um, pressione a nova combinação de teclas e ela já entra em uso na hora — a mudança também é salva no `config.yaml` automaticamente. Não precisa reiniciar o script nem fechar o GTA.
 
 ---
 

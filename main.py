@@ -14,6 +14,7 @@ from pynput import keyboard
 
 # Local application imports
 from assets.ui import  OverlayManager
+from assets.settings_window import SettingsWindow
 from tools.autoclicker import AutoClicker, SnackSpammer, AntiAFK
 from solvers import casinofingerprint, casinokeypad, cayofingerprint, cayovoltage
 from exploits import jobwarp
@@ -30,7 +31,7 @@ from core.state import runtime
 from core.logger import console, logger
 
 # Constants
-VERSION = "v3.3.5"
+VERSION = "v3.4.0"
 APP_TITLE = "VKit - Toolbox"
 
 
@@ -86,14 +87,33 @@ class AppConfig:
             config = yaml.safe_load(f)
 
         fw = config["firewall"]
+        hotkeys = config["hotkeys"]
+        hotkeys.setdefault("open_settings", "ctrl+f7")
+
         return cls(
             rule_name=fw["rule_name"],
             remote_ip=fw["remote_ip"],
             test_port=fw["test_port"],
-            hotkeys=config["hotkeys"],
+            hotkeys=hotkeys,
             require_game_focus=config.get("require_game_focus", True),
             auto_stop_on_unfocus=config.get("auto_stop_on_unfocus", True),
         )
+
+    def save(self, path: Path) -> None:
+        """Persist current configuration back to disk (same shape as _create_default_config)."""
+        config = {
+            "firewall": {
+                "rule_name": self.rule_name,
+                "remote_ip": self.remote_ip,
+                "test_port": self.test_port,
+            },
+            "require_game_focus": self.require_game_focus,
+            "auto_stop_on_unfocus": self.auto_stop_on_unfocus,
+            "hotkeys": self.hotkeys,
+        }
+
+        with open(path, "w") as f:
+            yaml.dump(config, f, default_flow_style=False, sort_keys=False)
 
     @staticmethod
     def _create_default_config(path: Path) -> None:
@@ -115,6 +135,7 @@ class AppConfig:
                 "job_warp": "ctrl+shift+j",
                 "debug_toggle": "ctrl+alt+shift+d",
                 "kill_gta": "ctrl+shift+q",
+                "open_settings": "ctrl+f7",
                 "casino_fingerprint": "f5",
                 "casino_keypad": "f6",
                 "cayo_fingerprint": "ctrl+f5",
@@ -224,6 +245,7 @@ class HotkeyHandler:
         anti_afk: AntiAFK,
         solver_manager: SolverManager,
         exploit_manager: ExploitManager,
+        settings_window=None,
     ):
 
         self.config = config
@@ -235,6 +257,7 @@ class HotkeyHandler:
         self.anti_afk = anti_afk
         self.solver_manager = solver_manager
         self.exploit_manager = exploit_manager
+        self.settings_window = settings_window
 
         self.current_keys = set()
         self.triggered = set()
@@ -292,6 +315,15 @@ class HotkeyHandler:
             return keyboard.KeyCode.from_char(key.char.lower())
 
         return key
+
+    def update_hotkey(self, action: str, hotkey_str: str) -> None:
+        """Rebind a hotkey at runtime (used by the settings panel) without
+        needing to restart the app."""
+        with self._lock:
+            self.hotkeys[action] = self._parse_hotkey(hotkey_str)
+            self.config.hotkeys[action] = hotkey_str
+            self.current_keys.clear()
+            self.triggered.clear()
 
     def _on_focus_change(self, is_focused: bool):
         """Handle focus change - stop tools on unfocus"""
@@ -458,6 +490,7 @@ class HotkeyHandler:
                 self.manager, self.sound_manager
             ),
             "debug_toggle": self._toggle_debug,
+            "open_settings": self._toggle_settings_window,
             "autoclicker": lambda: self._toggle_tool(
                 self.autoclicker, "AUTO CLICKER ⚡"
             ),
@@ -513,6 +546,16 @@ class HotkeyHandler:
         console.print(f"🐛 DEBUG MODE [bold]{status}[/bold]", style="yellow")
         self.manager.show_notification("DEBUG MODE 🐛", status, "#f59e0b")
         console.print()
+
+    def _toggle_settings_window(self):
+        """Toggle the in-game hotkey settings panel"""
+        if not self.settings_window:
+            return
+
+        console.print("🛠️  Toggling settings panel...", style="cyan")
+        # Tkinter widgets can only be touched from the main/mainloop thread,
+        # but this handler runs on the hotkey thread pool - schedule it.
+        self.settings_window.request_toggle()
 
     def _toggle_tool(self, tool, name: str, extra: str = ""):
         """Toggle tool on/off"""
@@ -641,6 +684,7 @@ def main():
         config.rule_name, config.remote_ip, config.test_port
     )
     overlay_manager = OverlayManager()
+    settings_window = SettingsWindow(overlay_manager.root, config, CONFIG_PATH)
 
     # Initialize tools
     autoclicker = AutoClicker(sound_manager)
@@ -682,7 +726,9 @@ def main():
         anti_afk,
         solver_manager,
         exploit_manager,
+        settings_window=settings_window,
     )
+    settings_window.attach_hotkey_handler(hotkey_handler)
 
     # Register cleanup
     atexit.register(cleanup, autoclicker, snack_spammer, anti_afk, firewall_manager)

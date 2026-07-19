@@ -18,6 +18,33 @@ from core.logger import console
 
 
 # ============================================================================
+# HOTKEY DESCRIPTIONS
+# ============================================================================
+
+# Single source of truth for the hotkey reference table - shared by the
+# console table (UIManager.print_hotkeys) and the in-game settings panel
+# (assets/settings_window.py). (None, None) rows render as blank separators.
+HOTKEY_DESCRIPTIONS = [
+    ("toggle_overlay", "Toggle overlay mode (Full ↔ Mini)"),
+    ("toggle_nosave", "Toggle NOSAVE (ON ↔ OFF)"),
+    ("debug_toggle", "🐛 Toggle Debug Mode"),
+    ("open_settings", "🛠️ Abrir painel de atalhos"),
+    (None, None),
+    ("autoclicker", "⚡ Toggle Fast Autoclicker (50 CPS)"),
+    ("snack_spammer", "🍔 Toggle Snack Spammer (Hold TAB)"),
+    ("anti_afk", "🎮 Toggle Anti-AFK (S+A ↔ S+D)"),
+    ("kill_gta", "💀 Kill GTA5 Process (Instant)"),
+    (None, None),
+    ("job_warp", "🚀 Job Warp Exploit (Toggle)"),
+    (None, None),
+    ("casino_fingerprint", "Casino Fingerprint Solver"),
+    ("casino_keypad", "Casino Keypad Solver"),
+    ("cayo_fingerprint", "Cayo Perico Fingerprint Solver"),
+    ("cayo_voltage", "Cayo Perico Voltage Solver"),
+]
+
+
+# ============================================================================
 # UPDATE CHECKER
 # ============================================================================
 
@@ -128,29 +155,15 @@ class UIManager:
         hotkeys_table.add_column("Shortcut", style="bold magenta", width=25)
         hotkeys_table.add_column("Action", style="white", width=38)
 
-        # Define all hotkey rows
-        rows = [
-            (hotkeys['toggle_overlay'], "Toggle overlay mode (Full ↔ Mini)"),
-            (hotkeys['toggle_nosave'], "Toggle NOSAVE (ON ↔ OFF)"),
-            (hotkeys['debug_toggle'], "🐛 Toggle Debug Mode"),
-            ("", ""),
-            (hotkeys['autoclicker'], "⚡ Toggle Fast Autoclicker (50 CPS)"),
-            (hotkeys['snack_spammer'], "🍔 Toggle Snack Spammer (Hold TAB)"),
-            (hotkeys['anti_afk'], "🎮 Toggle Anti-AFK (S+A ↔ S+D)"),
-            (hotkeys['kill_gta'], "💀 Kill GTA5 Process (Instant)"),
-            ("", ""),
-            (hotkeys['job_warp'], "🚀 Job Warp Exploit (Toggle)"),
-            ("", ""),
-            (hotkeys['casino_fingerprint'], "Casino Fingerprint Solver"),
-            (hotkeys['casino_keypad'], "Casino Keypad Solver"),
-            (hotkeys['cayo_fingerprint'], "Cayo Perico Fingerprint Solver"),
-            (hotkeys['cayo_voltage'], "Cayo Perico Voltage Solver"),
-        ]
+        for action, description in HOTKEY_DESCRIPTIONS:
+            if action is None:
+                hotkeys_table.add_row("", "")
+                continue
 
-        for hotkey, action in rows:
+            hotkey = hotkeys.get(action, "")
             hotkeys_table.add_row(
                 UIManager._format_hotkey(hotkey) if hotkey else "",
-                action
+                description
             )
 
         console.print(hotkeys_table)
