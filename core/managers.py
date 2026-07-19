@@ -30,15 +30,15 @@ class GameDetector:
 
     def get_gta_process(self) -> Optional[psutil.Process]:
         start_time = time.time()
-        console.print("Waiting for GTA.", style="yellow")
+        console.print("Aguardando o GTA.", style="yellow")
         while True:
             for proc in psutil.process_iter(['pid', 'name']):
                 try:
                     if proc.info['name'].startswith(self.process_prefix):
-                        console.print(f"{proc.info['name']} detected.", style="yellow")
+                        console.print(f"{proc.info['name']} detectado.", style="yellow")
                         return proc
                 except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-                    console.print("Waiting for GTA.", style="yellow")
+                    console.print("Aguardando o GTA.", style="yellow")
                     pass
                 
             
@@ -128,7 +128,7 @@ class WindowFocusManager:
 
         except Exception as e:
             if runtime.debug:
-                print(f"[DEBUG] Focus hook error: {e}")
+                print(f"[DEBUG] Erro no hook de foco: {e}")
 
     @staticmethod
     def _safe_callback(callback: Callable, is_focused: bool):
@@ -137,7 +137,7 @@ class WindowFocusManager:
             callback(is_focused)
         except Exception as e:
             if runtime.debug:
-                print(f"[DEBUG] Focus callback error: {e}")
+                print(f"[DEBUG] Erro no callback de foco: {e}")
 
     def register_focus_callback(self, callback: Callable):
         """Register focus change callback."""
@@ -158,7 +158,7 @@ class WindowFocusManager:
             self._is_focused = is_gta
 
             if runtime.debug:
-                print(f"[DEBUG] Force refresh: focus={is_gta} (was {old_state})")
+                print(f"[DEBUG] Atualização forçada: foco={is_gta} (era {old_state})")
 
             # Trigger callbacks if state changed
             if is_gta != old_state:
@@ -168,7 +168,7 @@ class WindowFocusManager:
             return is_gta
         except Exception as e:
             if runtime.debug:
-                print(f"[DEBUG] Force refresh error: {e}")
+                print(f"[DEBUG] Erro na atualização forçada: {e}")
             return self._is_focused
 
     def start_monitoring(self):
@@ -183,10 +183,10 @@ class WindowFocusManager:
                 )
 
                 if not self._hook_id:
-                    raise RuntimeError("Failed to set Windows event hook")
+                    raise RuntimeError("Falha ao configurar o hook de eventos do Windows")
 
                 if runtime.debug:
-                    print("[DEBUG] ✓ Windows event hook installed")
+                    print("[DEBUG] ✓ Hook de eventos do Windows instalado")
 
                 # Check initial state
                 try:
@@ -207,7 +207,7 @@ class WindowFocusManager:
 
             except Exception as e:
                 if runtime.debug:
-                    print(f"[DEBUG] Hook thread error: {e}")
+                    print(f"[DEBUG] Erro na thread do hook: {e}")
             finally:
                 if self._hook_id:
                     user32.UnhookWinEvent(self._hook_id)
@@ -318,18 +318,20 @@ class FirewallManager:
 
         time.sleep(0.5)
         if self.rule_exists():
-            console.print("✓ NO SAVING MODE [bold green]ENABLED[/bold green]", style="green")
+            console.print("✓ MODO NO SAVE [bold green]ATIVADO[/bold green]", style="green")
             manager.update_status("ON")
-            manager.show_notification("NOSAVE MODE", "Session protection enabled", "#85BB65")
+            # Nota: cor literal (não importada) pra evitar import circular com
+            # assets.ui, que já importa deste módulo. Mesmo valor de C_GREEN.
+            manager.show_notification("MODO NOSAVE", "Proteção da sessão ativada", "#22C55E")
             sound_manager.play_on()
 
             if self.test_ip_blocked():
                 console.print(
-                    f"✓ Connection to [cyan]{self.remote_ip}:{self.test_port}[/cyan] "
-                    f"is [bold red]BLOCKED[/bold red]", style="green"
+                    f"✓ Conexão com [cyan]{self.remote_ip}:{self.test_port}[/cyan] "
+                    f"está [bold red]BLOQUEADA[/bold red]", style="green"
                 )
         else:
-            console.print("✗ Failed to add firewall rule", style="red")
+            console.print("✗ Falha ao adicionar a regra de firewall", style="red")
         console.print()
 
     def delete_rule(self, manager, sound_manager):
@@ -341,18 +343,18 @@ class FirewallManager:
 
         time.sleep(0.5)
         if not self.rule_exists():
-            console.print("✓ NO SAVING MODE [bold red]DISABLED[/bold red]", style="green")
+            console.print("✓ MODO NO SAVE [bold red]DESATIVADO[/bold red]", style="green")
             manager.update_status("OFF")
-            manager.show_notification("NOSAVE MODE", "Session protection disabled", "#ef4444")
+            manager.show_notification("MODO NOSAVE", "Proteção da sessão desativada", "#FF3B5C")
             sound_manager.play_off()
 
             if not self.test_ip_blocked():
                 console.print(
-                    f"✓ Connection to [cyan]{self.remote_ip}:{self.test_port}[/cyan] "
-                    f"is [bold green]ACCESSIBLE[/bold green]", style="green"
+                    f"✓ Conexão com [cyan]{self.remote_ip}:{self.test_port}[/cyan] "
+                    f"está [bold green]ACESSÍVEL[/bold green]", style="green"
                 )
         else:
-            console.print("✗ Failed to delete firewall rule", style="red")
+            console.print("✗ Falha ao remover a regra de firewall", style="red")
         console.print()
 
     def toggle_rule(self, manager, sound_manager):
@@ -405,7 +407,7 @@ class ProcessManager:
         try:
             ctypes.windll.shell32.ShellExecuteW(None, "runas", executable, params, current_dir, 1)
         except Exception as e:
-            console.print(f"[red]Failed to elevate: {e}[/red]")
+            console.print(f"[red]Falha ao elevar privilégios: {e}[/red]")
 
         sys.exit()
 
@@ -420,18 +422,18 @@ class ProcessManager:
             )
 
             if result.returncode == 0:
-                console.print(f"✓ {process_name} process [bold red]KILLED[/bold red]", style="green")
+                console.print(f"✓ Processo {process_name} [bold red]ENCERRADO[/bold red]", style="green")
                 manager.show_notification(
-                    "PROCESS TERMINATED",
-                    f"{process_name} has been closed", "#ef4444"
+                    "PROCESSO ENCERRADO",
+                    f"{process_name} foi encerrado", "#FF3B5C"
                 )
             else:
-                console.print(f"✗ {process_name} process not found or already closed", style="yellow")
+                console.print(f"✗ Processo {process_name} não encontrado ou já encerrado", style="yellow")
                 manager.show_notification(
-                    "PROCESS NOT FOUND",
-                    f"{process_name} is not running", "#f59e0b"
+                    "PROCESSO NÃO ENCONTRADO",
+                    f"{process_name} não está rodando", "#F59E0B"
                 )
         except Exception as e:
-            console.print(f"✗ Failed to kill {process_name}: {e}", style="red")
-            manager.show_notification("ERROR", f"Failed to terminate {process_name}", "#ef4444")
+            console.print(f"✗ Falha ao encerrar {process_name}: {e}", style="red")
+            manager.show_notification("ERRO", f"Falha ao encerrar {process_name}", "#FF3B5C")
         console.print()

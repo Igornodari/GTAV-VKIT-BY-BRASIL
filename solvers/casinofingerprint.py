@@ -93,11 +93,11 @@ def find_shortest_solution(target_coordinates):
                 next_path_head = ReverseLinkedNode('return', next_path_head, next_path_head.idx + 1)
             queue.append((next_pos, next_visited_mask, next_path_head))
 
-    raise Exception('No solution found')
+    raise Exception('Nenhuma solução encontrada')
 
 
 def main(bbox):
-    console.print("🔍 [bold cyan]Casino Fingerprint Solver[/bold cyan]", style="cyan")
+    console.print("🔍 [bold cyan]Solver de Fingerprint do Cassino[/bold cyan]", style="cyan")
     
     # Capture and process screen
     im = ImageGrab.grab(bbox)
@@ -116,21 +116,21 @@ def main(bbox):
     im.close()
 
     if not togo:
-        console.print("[red]✗[/red] No fingerprint matches found", style="red")
+        console.print("[red]✗[/red] Nenhuma coincidência de fingerprint encontrada", style="red")
         return
 
     # Calculate optimal path
-    console.print(f"[green]✓[/green] Found [bold]{len(togo)}[/bold] fingerprint matches", style="green")
+    console.print(f"[green]✓[/green] [bold]{len(togo)}[/bold] coincidência(s) de fingerprint encontrada(s)", style="green")
     moves = find_shortest_solution(togo)
-    
+
     # Display solution
     move_keys = [k.upper() if k != 'return' and k != 'tab' else k for k in moves]
-    console.print(f"[yellow]→[/yellow] Solution: [bold cyan]{' → '.join(move_keys)}[/bold cyan]", style="yellow")
-    
+    console.print(f"[yellow]→[/yellow] Solução: [bold cyan]{' → '.join(move_keys)}[/bold cyan]", style="yellow")
+
     # Execute keystrokes
     for key in moves:
         keyboard.press_and_release(key)
         time.sleep(0.03)
-    
-    console.print("[green]✓[/green] Casino Fingerprint solved successfully", style="green")
+
+    console.print("[green]✓[/green] Fingerprint do Cassino resolvido com sucesso", style="green")
     console.print()

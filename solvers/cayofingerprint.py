@@ -35,7 +35,7 @@ def index(part, parts):
     return -1
 
 def main(bbox):
-    console.print('[*] Cayo Perico Fingerprint')
+    console.print('[*] Fingerprint do Cayo Perico')
     im = ImageGrab.grab(bbox)
     im = im.resize((1920,1080))
 
@@ -67,5 +67,5 @@ def main(bbox):
         keyboard.press_and_release(key)
         time.sleep(0.025)
 
-    console.print('[*] END')
+    console.print('[*] FIM')
     console.print('=============================================')

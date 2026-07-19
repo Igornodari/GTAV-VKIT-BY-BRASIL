@@ -18,16 +18,10 @@ C_TEXT_GREY = "#b0b0b0"
 C_TEXT_DIM = "#808080"
 C_TEXT_DARKER = "#505050"
 
-# ⭐ ENHANCED: More vibrant colors
-C_GTA_CYAN = "#00d4ff"
-C_GTA_BLUE = "#0080ff"
-C_GTA_ORANGE = "#ff8c00"
-C_GTA_YELLOW = "#ffcc00"
-C_GREEN_SAFE = "#7dd956"
-C_GREEN_BRIGHT = "#82D668"  # More vibrant
-C_RED_DANGER = "#ff3860"
-C_RED_BRIGHT = "#FF3B5C"  # Pops more
-C_PURPLE = "#c084fc"
+# ===== BRAND PALETTE: green + white, red kept only for danger/off =====
+C_GREEN = "#22C55E"    # brand / active / success / default accent
+C_RED = "#FF3B5C"      # danger / disabled / error
+C_AMBER = "#F59E0B"    # warnings only
 
 FONT_TITLE = ("Franklin Gothic Demi", 18, "bold")
 FONT_HEADER = ("Franklin Gothic Medium", 11, "bold")
@@ -60,6 +54,25 @@ class Animator:
         return 1 + c3 * pow(x - 1, 3) + c1 * pow(x - 1, 2)
 
 
+def rounded_rect(canvas, x1, y1, x2, y2, radius=12, **kwargs):
+    """Draw a rounded rectangle on a canvas (smoothed polygon)."""
+    points = [
+        x1 + radius, y1,
+        x2 - radius, y1,
+        x2, y1,
+        x2, y1 + radius,
+        x2, y2 - radius,
+        x2, y2,
+        x2 - radius, y2,
+        x1 + radius, y2,
+        x1, y2,
+        x1, y2 - radius,
+        x1, y1 + radius,
+        x1, y1,
+    ]
+    return canvas.create_polygon(points, smooth=True, **kwargs)
+
+
 class ColorUtil:
     """Optimized color utilities with pre-generated common colors"""
 
@@ -71,7 +84,7 @@ class ColorUtil:
         if cls._COMMON_COLORS:
             return
 
-        colors = [C_GREEN_BRIGHT, C_RED_BRIGHT, C_GTA_CYAN, '#ffffff']
+        colors = [C_GREEN, C_RED, '#ffffff']
         alphas = [0.05, 0.08, 0.12, 0.15, 0.20, 0.25, 0.30, 0.40, 0.50, 
                   0.60, 0.70, 0.80, 0.90, 1.0]
 
@@ -180,13 +193,13 @@ class GTAInteractionMenu(tk.Frame):
         # Left accent bar
         self.accent_bar = self.canvas.create_rectangle(
             0, 0, 12, self.height,
-            fill=C_RED_BRIGHT, outline="", width=0
+            fill=C_RED, outline="", width=0
         )
 
         # Inner accent line
         self.inner_accent = self.canvas.create_line(
             12, 0, 12, self.height,
-            fill=C_RED_BRIGHT, width=2
+            fill=C_RED, width=2
         )
 
         # Feature title
@@ -195,37 +208,37 @@ class GTAInteractionMenu(tk.Frame):
 
         # Status text with glow effect
         self.status_glow = self.canvas.create_text(
-            25, 46, text="DISABLED",
+            25, 46, text="DESATIVADO",
             font=("Segoe UI", 28, "bold"),
-            fill=ColorUtil.with_alpha(C_RED_BRIGHT, 0.3),
+            fill=ColorUtil.with_alpha(C_RED, 0.3),
             anchor="w"
         )
         self.status_text = self.canvas.create_text(
-            24, 47, text="DISABLED",
+            24, 47, text="DESATIVADO",
             font=("Segoe UI", 28, "bold"),
-            fill=C_RED_BRIGHT, anchor="w"
+            fill=C_RED, anchor="w"
         )
 
         # Animation state
         self.color_animating = False
         self.shake_amount = 0
         self.shake_offset = 0
-        self.current_color = C_RED_BRIGHT
-        self.target_color = C_RED_BRIGHT
+        self.current_color = C_RED
+        self.target_color = C_RED
         self.anim_step = 0
         self.anim_total = 30
 
     def set_status(self, is_enabled: bool, animated: bool = True):
         """Update status with animation and shake"""
         if is_enabled:
-            self.canvas.itemconfig(self.status_text, text="ENABLED")
-            self.canvas.itemconfig(self.status_glow, text="ENABLED")
-            self.target_color = C_GREEN_BRIGHT
+            self.canvas.itemconfig(self.status_text, text="ATIVADO")
+            self.canvas.itemconfig(self.status_glow, text="ATIVADO")
+            self.target_color = C_GREEN
             self.shake_amount = 3
         else:
-            self.canvas.itemconfig(self.status_text, text="DISABLED")
-            self.canvas.itemconfig(self.status_glow, text="DISABLED")
-            self.target_color = C_RED_BRIGHT
+            self.canvas.itemconfig(self.status_text, text="DESATIVADO")
+            self.canvas.itemconfig(self.status_glow, text="DESATIVADO")
+            self.target_color = C_RED
             self.shake_amount = 3
 
         if animated and not self.color_animating:
@@ -288,7 +301,7 @@ class GTAMiniIndicator(tk.Frame):
         self.center = self.size / 2
 
         self.glow_layers = []
-        base_color = C_RED_BRIGHT
+        base_color = C_RED
 
         layer_config = [
             (28, 0.12), (24, 0.20), (20, 0.35),
@@ -315,7 +328,7 @@ class GTAMiniIndicator(tk.Frame):
         self.core = self.canvas.create_oval(
             self.center - 8, self.center - 8,
             self.center + 8, self.center + 8,
-            fill=C_RED_BRIGHT, outline="", width=0
+            fill=C_RED, outline="", width=0
         )
 
         # Highlight
@@ -329,7 +342,7 @@ class GTAMiniIndicator(tk.Frame):
         self.breath_time = 0.0
         self.shimmer_time = 0.0
         self.status = "OFF"
-        self.base_color = C_RED_BRIGHT
+        self.base_color = C_RED
         self._frame_counter = 0
         self._update_interval = 2  # 30 FPS
 
@@ -346,7 +359,7 @@ class GTAMiniIndicator(tk.Frame):
             return
 
         self.status = status
-        self.base_color = C_GREEN_BRIGHT if status == "ON" else C_RED_BRIGHT
+        self.base_color = C_GREEN if status == "ON" else C_RED
 
         self.canvas.itemconfig(self.core, fill=self.base_color)
 
@@ -448,33 +461,34 @@ class GTANotification(tk.Frame):
         self.canvas.pack()
 
         # ⭐ ENHANCED: Deeper shadow
-        self.shadow = self.canvas.create_rectangle(
-            3, 3, self.width, self.height,
+        self.shadow = rounded_rect(
+            self.canvas, 3, 3, self.width, self.height, radius=10,
             fill=C_BG_DARKEST, outline="", width=0
         )
 
         # Main background
-        self.bg = self.canvas.create_rectangle(
-            0, 0, self.width - 3, self.height - 3,
+        self.bg = rounded_rect(
+            self.canvas, 0, 0, self.width - 3, self.height - 3, radius=10,
             fill=C_BG_DARK, outline=C_BG_LIGHTER, width=1
         )
 
-        # Left stripe
+        # Left accent stripe - inset from the rounded corners so it doesn't
+        # poke past the card's curved edges
         self.stripe = self.canvas.create_rectangle(
-            0, 0, 4, self.height - 3,
-            fill=C_GTA_CYAN, outline=""
+            0, 8, 4, self.height - 11,
+            fill=C_GREEN, outline=""
         )
 
         # Icon
         self.icon_bg = self.canvas.create_oval(14, 14, 56, 56, fill=C_BG_MEDIUM, outline="")
         self.icon_circle = self.canvas.create_oval(
             16, 16, 54, 54,
-            fill="", outline=C_GTA_CYAN, width=3,   
+            fill="", outline=C_GREEN, width=3,   
         )
         self.icon_text = self.canvas.create_text(
             35, 35, text="✓",
             font=("Segoe UI", 20, "bold"),
-            fill=C_GTA_CYAN
+            fill=C_GREEN
         )
 
         # Title and message
@@ -488,7 +502,7 @@ class GTANotification(tk.Frame):
         )
 
     def set_message(self, title: str, message: str = "", icon: str = "✓", 
-                    accent_color: str = C_GTA_CYAN):
+                    accent_color: str = C_GREEN):
         """Set notification content"""
         self.canvas.itemconfig(self.title_text, text=title.upper())
         self.canvas.itemconfig(self.msg_text, text=message)
@@ -517,11 +531,9 @@ class OverlayManager:
 
     # Notification icon mapping
     ICON_MAP = {
-        C_RED_BRIGHT: "✗", C_RED_DANGER: "✗",
-        C_GREEN_BRIGHT: "✓", C_GREEN_SAFE: "✓",
-        C_GTA_CYAN: "ℹ", C_GTA_BLUE: "ℹ",
-        C_PURPLE: "⚡",
-        C_GTA_ORANGE: "⚠", C_GTA_YELLOW: "⚠",
+        C_RED: "✗",
+        C_GREEN: "✓",
+        C_AMBER: "⚠",
     }
 
     def __init__(self):
@@ -761,7 +773,7 @@ class OverlayManager:
         self,
         title: str,
         message: str = "",
-        color: str = C_GTA_CYAN,
+        color: str = C_GREEN,
         duration: int = 4000
     ) -> None:
         """Show notification with title/message"""

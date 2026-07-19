@@ -14,15 +14,17 @@ from assets.ui import (
     C_BG_DARKEST,
     C_BG_LIGHTER,
     C_BG_MEDIUM,
-    C_GTA_CYAN,
-    C_GTA_ORANGE,
-    C_RED_BRIGHT,
+    C_GREEN,
+    C_AMBER,
+    C_RED,
     C_TEXT_GREY,
     C_TEXT_WHITE,
-    FONT_BODY,
-    FONT_HEADER,
     FONT_SMALL,
 )
+
+# Slightly smaller than the game overlay's own header font, just for this
+# panel's title - keeps the compact window from feeling cramped.
+PANEL_FONT_TITLE = ("Franklin Gothic Medium", 10, "bold")
 from core.logger import console
 from core.ui import HOTKEY_DESCRIPTIONS
 
@@ -86,7 +88,7 @@ class SettingsWindow(tk.Toplevel):
     """Borderless HUD-style panel listing every hotkey, with a live rebind
     flow. Hidden by default; toggled via the 'open_settings' hotkey."""
 
-    WIDTH = 480
+    WIDTH = 360
 
     def __init__(self, root: tk.Tk, config, config_path: Path):
         super().__init__(root)
@@ -101,6 +103,7 @@ class SettingsWindow(tk.Toplevel):
 
         self.overrideredirect(True)
         self.attributes("-topmost", True)
+        self.attributes("-alpha", 0.92)
         self.configure(bg=C_BG_DARK)
 
         self._build_ui()
@@ -111,27 +114,27 @@ class SettingsWindow(tk.Toplevel):
     # ------------------------------------------------------------------
 
     def _build_ui(self):
-        header = tk.Frame(self, bg=C_BG_DARKEST, height=36)
+        header = tk.Frame(self, bg=C_BG_DARKEST, height=26)
         header.pack(fill="x", side="top")
         header.pack_propagate(False)
 
         title = tk.Label(
             header,
-            text="⚙  VKIT — ATALHOS",
+            text="⚙ ATALHOS",
             bg=C_BG_DARKEST,
-            fg=C_GTA_CYAN,
-            font=FONT_HEADER,
+            fg=C_GREEN,
+            font=PANEL_FONT_TITLE,
             anchor="w",
         )
-        title.pack(side="left", padx=12)
+        title.pack(side="left", padx=8)
 
         close_btn = tk.Label(
             header, text="✕", bg=C_BG_DARKEST, fg=C_TEXT_GREY,
-            font=FONT_HEADER, cursor="hand2"
+            font=PANEL_FONT_TITLE, cursor="hand2"
         )
-        close_btn.pack(side="right", padx=12)
+        close_btn.pack(side="right", padx=8)
         close_btn.bind("<Button-1>", lambda e: self.hide())
-        close_btn.bind("<Enter>", lambda e: close_btn.config(fg=C_RED_BRIGHT))
+        close_btn.bind("<Enter>", lambda e: close_btn.config(fg=C_RED))
         close_btn.bind("<Leave>", lambda e: close_btn.config(fg=C_TEXT_GREY))
 
         for widget in (header, title):
@@ -147,32 +150,32 @@ class SettingsWindow(tk.Toplevel):
             self._build_row(body, action, description)
 
         self.warning_label = tk.Label(
-            self, text="", bg=C_BG_DARK, fg=C_GTA_ORANGE,
-            font=FONT_SMALL, wraplength=self.WIDTH - 24, justify="left",
+            self, text="", bg=C_BG_DARK, fg=C_AMBER,
+            font=FONT_SMALL, wraplength=self.WIDTH - 16, justify="left",
         )
-        self.warning_label.pack(fill="x", padx=12, pady=(0, 10))
+        self.warning_label.pack(fill="x", padx=8, pady=(0, 6))
 
     def _build_row(self, parent, action: str, description: str):
         row = tk.Frame(parent, bg=C_BG_DARK)
-        row.pack(fill="x", padx=12, pady=4)
+        row.pack(fill="x", padx=8, pady=2)
 
         desc_label = tk.Label(
             row, text=description, bg=C_BG_DARK, fg=C_TEXT_WHITE,
-            font=FONT_BODY, anchor="w", width=32,
+            font=FONT_SMALL, anchor="w", width=22, wraplength=140, justify="left",
         )
         desc_label.pack(side="left")
 
         combo_label = tk.Label(
             row,
             text=self._format_combo(self.config.hotkeys.get(action, "")),
-            bg=C_BG_MEDIUM, fg=C_GTA_CYAN, font=FONT_SMALL, width=16,
+            bg=C_BG_MEDIUM, fg=C_GREEN, font=FONT_SMALL, width=10,
         )
-        combo_label.pack(side="left", padx=6)
+        combo_label.pack(side="left", padx=4)
 
         change_btn = tk.Button(
             row, text="Alterar", command=lambda a=action: self._start_capture(a),
-            bg=C_BG_LIGHTER, fg=C_TEXT_WHITE, activebackground=C_GTA_CYAN,
-            relief="flat", font=FONT_SMALL, cursor="hand2", padx=8,
+            bg=C_BG_LIGHTER, fg=C_TEXT_WHITE, activebackground=C_GREEN,
+            relief="flat", font=FONT_SMALL, cursor="hand2", padx=4,
         )
         change_btn.pack(side="right")
 
@@ -243,7 +246,7 @@ class SettingsWindow(tk.Toplevel):
         self._capture = HotkeyCapture()
         self.warning_label.config(text="")
         self._row_widgets[action]["combo_label"].config(
-            text="Pressione uma tecla...", fg=C_GTA_ORANGE
+            text="Pressione uma tecla...", fg=C_AMBER
         )
 
         self.bind_all("<KeyPress>", self._on_capture_press)
@@ -261,7 +264,7 @@ class SettingsWindow(tk.Toplevel):
         self._capture = None
         self._row_widgets[action]["combo_label"].config(
             text=self._format_combo(self.config.hotkeys.get(action, "")),
-            fg=C_GTA_CYAN,
+            fg=C_GREEN,
         )
 
     def _on_capture_press(self, event):
@@ -305,7 +308,7 @@ class SettingsWindow(tk.Toplevel):
             )
             self._row_widgets[action]["combo_label"].config(
                 text=self._format_combo(self.config.hotkeys.get(action, "")),
-                fg=C_GTA_CYAN,
+                fg=C_GREEN,
             )
             return
 
@@ -315,7 +318,7 @@ class SettingsWindow(tk.Toplevel):
             self.hotkey_handler.update_hotkey(action, combo)
 
         self._row_widgets[action]["combo_label"].config(
-            text=self._format_combo(combo), fg=C_GTA_CYAN
+            text=self._format_combo(combo), fg=C_GREEN
         )
         console.print(
             f"✓ Atalho '{action}' alterado para "

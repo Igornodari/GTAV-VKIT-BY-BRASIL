@@ -81,7 +81,7 @@ def calculate_key_sequence(numbers):
     return keyboardgo
 
 def main(bbox):
-    console.print("🔍 [bold cyan]Casino Keypad Solver[/bold cyan]", style="cyan")
+    console.print("🔍 [bold cyan]Solver do Teclado do Cassino[/bold cyan]", style="cyan")
 
     # Capture screen
     im = ImageGrab.grab(bbox)
@@ -102,14 +102,14 @@ def main(bbox):
         for a in range(0, 6):
             numbers.append(dot_check(a, blackAndWhiteImage))
         
-        console.print(f"[green]✓[/green] Detected numbers: [bold cyan]{numbers}[/bold cyan]", style="green")
-        
+        console.print(f"[green]✓[/green] Números detectados: [bold cyan]{numbers}[/bold cyan]", style="green")
+
         # Wait for ready and execute
         check_ready(bbox)
         moves = calculate_key_sequence(numbers)
         move_keys = [k.upper() if k != 'return' else k for k in moves]
-        console.print(f"[yellow]→[/yellow] Solution: [bold cyan]{' → '.join(move_keys)}[/bold cyan]", style="yellow")
-        
+        console.print(f"[yellow]→[/yellow] Solução: [bold cyan]{' → '.join(move_keys)}[/bold cyan]", style="yellow")
+
         # Execute keystrokes
         for key in moves:
             keyboard.press_and_release(key)
@@ -117,11 +117,11 @@ def main(bbox):
                 time.sleep(0.025)
             if key == 'return':
                 time.sleep(1.95)
-        
-        console.print("[green]✓[/green] Casino Keypad solved successfully", style="green")
+
+        console.print("[green]✓[/green] Teclado do Cassino resolvido com sucesso", style="green")
         console.print()
-        
+
     except KeyError as e:
-        console.print(f"[red]✗[/red] Cyan pattern not detected. {e} - current resolution {bbox[2]}x{bbox[3]}", style="red")
+        console.print(f"[red]✗[/red] Padrão ciano não detectado. {e} - resolução atual {bbox[2]}x{bbox[3]}", style="red")
         console.print()
     
