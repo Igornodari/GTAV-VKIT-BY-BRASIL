@@ -4,6 +4,8 @@ import keyboard
 import numpy as np
 from PIL import ImageGrab
 
+from core.logger import console
+
 DIGITS_LOOKUP = {
     (1, 1, 1, 0, 1, 1, 1): 0,
     (0, 0, 1, 0, 0, 1, 0): 1,
@@ -71,19 +73,19 @@ def calculate(target_number, left_numbers, right_numbers):
 
             for z, x, v, n, k, l in keys:
                 if (target_number == left_numbers[z] * right_numbers[x] + left_numbers[v] * right_numbers[n] + left_numbers[k] * right_numbers[l]):
-                    print('-', moves[tuple(moves)[i]])
+                    console.print('-', moves[tuple(moves)[i]])
                     for key in (moves[tuple(moves)[i]]):
                         keyboard.press_and_release(key)
-                        if key == 's' or 'w' or 'enter':
+                        if key in ('s', 'w', 'enter'):
                             time.sleep(0.025)
                         if key == 'return':
                             time.sleep(1.3)
                     raise NotImplementedError
     except:
-        print('[*] END')
+        console.print('[*] END')
 
 def main(bbox):
-    print('[*] Cayo Voltage Hack')
+    console.print('[*] Cayo Voltage Hack')
 
     im = ImageGrab.grab(bbox)
     im = im.resize((1920,1080))
@@ -108,8 +110,8 @@ def main(bbox):
             pixel_check(right_symbol_length, right_symbol_height_2, blackAndWhiteImage, RIGHT_SYMBOLS)
         ]
 
-        print('- ', target_number, left_numbers, right_numbers)
+        console.print('- ', target_number, left_numbers, right_numbers)
         calculate(target_number, left_numbers, right_numbers)
     except KeyError as e:
-        print(f'[!] Target number not detected. {e} - current resolution {bbox[2]}x{bbox[3]}')
-        print('=============================================')
+        console.print(f'[!] Target number not detected. {e} - current resolution {bbox[2]}x{bbox[3]}')
+        console.print('=============================================')

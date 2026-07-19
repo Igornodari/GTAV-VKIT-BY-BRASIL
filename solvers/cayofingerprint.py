@@ -4,6 +4,8 @@ import keyboard
 import numpy as np
 from PIL import ImageGrab
 
+from core.logger import console
+
 targets = [(907, 331, 1562, 431), # split the big digit in 8 parts
 (907, 404, 1562, 504),
 (907, 500, 1562, 600),
@@ -33,7 +35,7 @@ def index(part, parts):
     return -1
 
 def main(bbox):
-    print('[*] Cayo Perico Fingerprint')
+    console.print('[*] Cayo Perico Fingerprint')
     im = ImageGrab.grab(bbox)
     im = im.resize((1920,1080))
 
@@ -56,14 +58,14 @@ def main(bbox):
 
         moves.append("s")
 
-    while moves[-1] == "S":
+    while moves and moves[-1] == "s":
         del moves[-1]
 
-    print('-', moves)
-    
+    console.print('-', moves)
+
     for key in moves:
         keyboard.press_and_release(key)
         time.sleep(0.025)
 
-    print('[*] END')
-    print('=============================================')
+    console.print('[*] END')
+    console.print('=============================================')

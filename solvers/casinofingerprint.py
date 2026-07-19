@@ -4,9 +4,8 @@ import keyboard
 import numpy as np
 from PIL import ImageGrab
 from collections import deque, namedtuple
-from rich.console import Console
 
-console = Console()
+from core.logger import console
 
 tofind = (950, 155, 1335, 685)
 

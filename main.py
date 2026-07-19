@@ -7,12 +7,10 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
-from concurrent.futures import ThreadPoolExecutor
 
 # Third-party imports
 import yaml
 from pynput import keyboard
-from rich.console import Console
 
 # Local application imports
 from assets.ui import  OverlayManager
@@ -28,15 +26,12 @@ from core.managers import (
     GameDetector
 )
 from core.ui import UIManager, UpdateChecker
-
-console = Console()
+from core.state import runtime
+from core.logger import console, logger
 
 # Constants
-VERSION = "v3.3.4"
+VERSION = "v3.3.5"
 APP_TITLE = "VKit - Toolbox"
-
-THREAD_POOL = ThreadPoolExecutor(max_workers=15, thread_name_prefix="vkit_worker")
-DEBUG = False
 
 
 # ============================================================================
@@ -151,7 +146,7 @@ class SolverManager:
         self.manager.show_notification(name, "Active", "#c084fc")
 
         if bbox := self.manager.get_window_bbox():
-            THREAD_POOL.submit(solver_func, bbox)
+            runtime.thread_pool.submit(solver_func, bbox)
 
     def casino_fingerprint(self):
         self._run_solver(casinofingerprint.main, "CASINO FINGERPRINT SOLVER 🎰")
@@ -182,7 +177,7 @@ class ExploitManager:
 
         console.print("[cyan]➤[/cyan] Triggering Job Warp exploit...", style="cyan")
         self.manager.show_notification("JOB WARP 🚀", "Exploit triggered", "#c084fc")
-        THREAD_POOL.submit(jobwarp.main, bbox, self.manager)
+        runtime.thread_pool.submit(jobwarp.main, bbox, self.manager)
 
 
 # ============================================================================
@@ -264,22 +259,25 @@ class HotkeyHandler:
             for action, hotkey_str in config.hotkeys.items()
         }
 
-        if DEBUG:
+        if runtime.debug:
             for action, combo in self.hotkeys.items():
                 print(f"[DEBUG] Parsed {action}: {combo}")
 
-    def _parse_hotkey(self, hotkey_str: str) -> frozenset:
+    @staticmethod
+    def _parse_hotkey(hotkey_str: str) -> frozenset:
         """Parse hotkey string into key set"""
         parts = [p.strip().lower() for p in hotkey_str.split("+")]
         keys = {
-            self.KEY_MAP.get(part, keyboard.KeyCode.from_char(part)) for part in parts
+            HotkeyHandler.KEY_MAP.get(part, keyboard.KeyCode.from_char(part))
+            for part in parts
         }
         return frozenset(keys)
 
-    def _normalize_key(self, key):
+    @staticmethod
+    def _normalize_key(key):
         """Normalize key variants (left/right modifiers, case)"""
         # Check modifier normalization
-        if normalized := self.MODIFIER_NORMALIZE.get(key):
+        if normalized := HotkeyHandler.MODIFIER_NORMALIZE.get(key):
             return normalized
 
         # Handle VK codes
@@ -298,14 +296,14 @@ class HotkeyHandler:
     def _on_focus_change(self, is_focused: bool):
         """Handle focus change - stop tools on unfocus"""
         if is_focused:
-            if DEBUG:
+            if runtime.debug:
                 print("[DEBUG] GTA regained focus - restarting listener...")
 
             with self._lock:
                 self.current_keys.clear()
                 self.triggered.clear()
 
-            THREAD_POOL.submit(self._restart_listener)
+            runtime.thread_pool.submit(self._restart_listener)
             return
 
         # Stop active tools on unfocus
@@ -333,7 +331,7 @@ class HotkeyHandler:
                 "AUTO-STOPPED", f"Tools paused: {tools_str}", "#f59e0b"
             )
 
-            if DEBUG:
+            if runtime.debug:
                 print(f"[DEBUG] Focus lost - Stopped: {tools_str}")
 
     def _restart_listener(self):
@@ -344,10 +342,11 @@ class HotkeyHandler:
                 if self._listener is not None:
                     try:
                         self._listener.stop()
-                        if DEBUG:
+                        if runtime.debug:
                             print("[DEBUG] Stopped old listener")
                     except Exception as e:
-                        if DEBUG:
+                        logger.exception("Error stopping listener")
+                        if runtime.debug:
                             print(f"[DEBUG] Error stopping listener: {e}")
 
                 time.sleep(0.2)
@@ -358,18 +357,19 @@ class HotkeyHandler:
                 )
                 self._listener.start()
 
-                if DEBUG:
+                if runtime.debug:
                     print("[DEBUG] ✓ Listener restarted")
 
             # Force refresh focus state after restart
             time.sleep(0.1)
             is_focused = self.focus_manager.force_refresh_focus_state()
 
-            if DEBUG:
+            if runtime.debug:
                 print(f"[DEBUG] Focus state after restart: {is_focused}")
 
         except Exception as e:
-            if DEBUG:
+            logger.exception("Failed to restart listener")
+            if runtime.debug:
                 print(f"[DEBUG] Failed to restart listener: {e}")
 
     def on_press(self, key):
@@ -377,13 +377,13 @@ class HotkeyHandler:
         try:
             normalized = self._normalize_key(key)
 
-            if DEBUG:
+            if runtime.debug:
                 print(f"[DEBUG] Key pressed: {key} -> {normalized}")
 
             with self._lock:
                 self.current_keys.add(normalized)
 
-                if DEBUG:
+                if runtime.debug:
                     print(f"[DEBUG]   Current keys: {self.current_keys}")
                     print(
                         f"[DEBUG]   GTA focused: {self.focus_manager.is_gta_focused()}"
@@ -391,7 +391,7 @@ class HotkeyHandler:
 
                 # Skip if focus required but not focused
                 if self.require_game_focus and not self.focus_manager.is_gta_focused():
-                    if DEBUG:
+                    if runtime.debug:
                         print("[DEBUG]   GTA not focused - ignoring")
                     return
 
@@ -410,13 +410,14 @@ class HotkeyHandler:
                     action, combo = max(matches, key=lambda x: len(x[1]))
                     self.triggered.add(action)
 
-                    if DEBUG:
+                    if runtime.debug:
                         print(f"[DEBUG] ✓✓✓ HOTKEY MATCHED: {action}")
 
-                    THREAD_POOL.submit(self._handle_action, action)
+                    runtime.thread_pool.submit(self._handle_action, action)
 
         except Exception as e:
-            if DEBUG:
+            logger.exception("Key press error")
+            if runtime.debug:
                 print(f"[DEBUG] Key press error: {e}")
 
     def on_release(self, key):
@@ -424,7 +425,7 @@ class HotkeyHandler:
         try:
             normalized = self._normalize_key(key)
 
-            if DEBUG:
+            if runtime.debug:
                 print(f"[DEBUG] Key released: {key} -> {normalized}")
 
             with self._lock:
@@ -441,11 +442,12 @@ class HotkeyHandler:
                 for action in to_clear:
                     self.triggered.discard(action)
 
-                if DEBUG and to_clear:
+                if runtime.debug and to_clear:
                     print(f"[DEBUG]   Cleared combos: {to_clear}")
 
         except Exception as e:
-            if DEBUG:
+            logger.exception("Key release error")
+            if runtime.debug:
                 print(f"[DEBUG] Key release error: {e}")
 
     def _handle_action(self, action: str):
@@ -479,7 +481,8 @@ class HotkeyHandler:
             try:
                 handler()
             except Exception as e:
-                if DEBUG:
+                logger.exception("Action handler error (%s)", action)
+                if runtime.debug:
                     print(f"[DEBUG] Action handler error: {e}")
 
     def _toggle_overlay(self):
@@ -505,9 +508,8 @@ class HotkeyHandler:
 
     def _toggle_debug(self):
         """Toggle debug mode"""
-        global DEBUG
-        DEBUG = not DEBUG
-        status = "ENABLED" if DEBUG else "DISABLED"
+        runtime.debug = not runtime.debug
+        status = "ENABLED" if runtime.debug else "DISABLED"
         console.print(f"🐛 DEBUG MODE [bold]{status}[/bold]", style="yellow")
         self.manager.show_notification("DEBUG MODE 🐛", status, "#f59e0b")
         console.print()
@@ -525,7 +527,7 @@ class HotkeyHandler:
 
     def start_listening(self):
         """Start keyboard listener"""
-        if DEBUG:
+        if runtime.debug:
             print("[DEBUG] Starting initial keyboard listener...")
 
         try:
@@ -535,7 +537,7 @@ class HotkeyHandler:
                 )
                 self._listener.start()
 
-            if DEBUG:
+            if runtime.debug:
                 print("[DEBUG] ✓ Listener started")
 
             while self._should_run:
@@ -590,17 +592,21 @@ def disable_console_quickedit():
 
         kernel32.SetConsoleMode(h_console, new_mode)
 
-        if DEBUG:
+        if runtime.debug:
             print(f"[DEBUG] Console mode changed: {mode.value:04x} -> {new_mode:04x}")
 
     except Exception as e:
-        if DEBUG:
+        logger.exception("Failed to disable QuickEdit")
+        if runtime.debug:
             print(f"[DEBUG] Failed to disable QuickEdit: {e}")
 
 
 def global_exception_handler(exc_type, exc_value, exc_traceback):
     """Global exception handler to prevent crashes"""
-    if DEBUG:
+    logger.error(
+        "Unhandled exception", exc_info=(exc_type, exc_value, exc_traceback)
+    )
+    if runtime.debug:
         sys.__excepthook__(exc_type, exc_value, exc_traceback)
     else:
         console.print(f"[red]✗ Critical error: {exc_value}[/red]")
@@ -613,13 +619,11 @@ def global_exception_handler(exc_type, exc_value, exc_traceback):
 
 def main():
     """Main application entry point"""
-    global DEBUG
-
     # Set global exception handler
     sys.excepthook = global_exception_handler
 
     if "--debug" in sys.argv:
-        DEBUG = True
+        runtime.debug = True
         console.print("[bold yellow]🐛 DEBUG MODE ENABLED[/bold yellow]")
         console.print()
 
@@ -694,7 +698,7 @@ def main():
     except KeyboardInterrupt:
         console.print("\n[yellow]⚠[/yellow] Shutting down...", style="bold")
     finally:
-        THREAD_POOL.shutdown(wait=False)
+        runtime.thread_pool.shutdown(wait=False)
         console.print("✓ Script terminated successfully\n", style="green bold")
 
 

@@ -3,9 +3,8 @@ import time
 import keyboard
 import numpy as np
 from PIL import ImageGrab
-from rich.console import Console
 
-console = Console()
+from core.logger import console
 
 # Casino Keypad specific constants (adjusted from your example)
 DIGITS_LOOKUP = {

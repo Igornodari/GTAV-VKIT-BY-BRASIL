@@ -18,9 +18,9 @@ from typing import Callable, Optional
 import psutil
 import win32gui
 import win32process
-from rich.console import Console
 
-console = Console()
+from core.state import runtime
+from core.logger import console
 
 class GameDetector:
     def __init__(self, process_prefix: str = "GTA5", poll_interval: float = 0.5, timeout: Optional[float] = None):
@@ -58,7 +58,9 @@ class WindowFocusManager:
     EVENT_SYSTEM_FOREGROUND = 0x0003
     WINEVENT_OUTOFCONTEXT = 0x0000
 
-    def __init__(self, process_name: str = GameDetector().get_gta_process().name()):
+    def __init__(self, process_name: Optional[str] = None):
+        if process_name is None:
+            process_name = GameDetector().get_gta_process().name()
         self.process_name = process_name.lower()
         self.gta_titles = frozenset(['grand theft auto v', 'gta5', 'rockstar games'])
 
@@ -122,14 +124,10 @@ class WindowFocusManager:
             if is_gta != self._is_focused:
                 self._is_focused = is_gta
                 for callback in self._callbacks[:]:
-                    # Import here to avoid circular dependency
-                    from main import THREAD_POOL
-                    THREAD_POOL.submit(self._safe_callback, callback, is_gta)
+                    runtime.thread_pool.submit(self._safe_callback, callback, is_gta)
 
         except Exception as e:
-            # Import here
-            from main import DEBUG
-            if DEBUG:
+            if runtime.debug:
                 print(f"[DEBUG] Focus hook error: {e}")
 
     @staticmethod
@@ -138,8 +136,7 @@ class WindowFocusManager:
         try:
             callback(is_focused)
         except Exception as e:
-            from main import DEBUG
-            if DEBUG:
+            if runtime.debug:
                 print(f"[DEBUG] Focus callback error: {e}")
 
     def register_focus_callback(self, callback: Callable):
@@ -160,19 +157,17 @@ class WindowFocusManager:
             old_state = self._is_focused
             self._is_focused = is_gta
 
-            from main import DEBUG, THREAD_POOL
-            if DEBUG:
+            if runtime.debug:
                 print(f"[DEBUG] Force refresh: focus={is_gta} (was {old_state})")
 
             # Trigger callbacks if state changed
             if is_gta != old_state:
                 for callback in self._callbacks[:]:
-                    THREAD_POOL.submit(self._safe_callback, callback, is_gta)
+                    runtime.thread_pool.submit(self._safe_callback, callback, is_gta)
 
             return is_gta
         except Exception as e:
-            from main import DEBUG
-            if DEBUG:
+            if runtime.debug:
                 print(f"[DEBUG] Force refresh error: {e}")
             return self._is_focused
 
@@ -190,8 +185,7 @@ class WindowFocusManager:
                 if not self._hook_id:
                     raise RuntimeError("Failed to set Windows event hook")
 
-                from main import DEBUG
-                if DEBUG:
+                if runtime.debug:
                     print("[DEBUG] ✓ Windows event hook installed")
 
                 # Check initial state
@@ -212,8 +206,7 @@ class WindowFocusManager:
                         self._shutdown.wait(0.1)
 
             except Exception as e:
-                from main import DEBUG
-                if DEBUG:
+                if runtime.debug:
                     print(f"[DEBUG] Hook thread error: {e}")
             finally:
                 if self._hook_id:
@@ -247,8 +240,7 @@ class SoundManager:
     def play(self, sound_type: str):
         """Play sound asynchronously."""
         if path := self.sounds.get(sound_type):
-            from main import THREAD_POOL
-            THREAD_POOL.submit(self._play_sound, path)
+            runtime.thread_pool.submit(self._play_sound, path)
 
     @staticmethod
     def _play_sound(path: str):

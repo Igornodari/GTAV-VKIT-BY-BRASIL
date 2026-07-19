@@ -9,12 +9,12 @@ import json
 import urllib.request
 from rich import box
 from rich.align import Align
-from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
 
-console = Console()
+from core.state import runtime
+from core.logger import console
 
 
 # ============================================================================
@@ -66,8 +66,7 @@ class UpdateChecker:
                     return self.update_available
 
         except Exception as e:
-            from main import DEBUG
-            if DEBUG:
+            if runtime.debug:
                 print(f"[DEBUG] Update check failed: {e}")
             return False
 

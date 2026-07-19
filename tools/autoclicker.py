@@ -1,10 +1,9 @@
 import threading
 import time
-from rich.console import Console
 import random
 
+from core.logger import console
 
-console = Console()
 try:
     import pydirectinput
     pydirectinput.PAUSE = 0.001
@@ -51,8 +50,6 @@ class AutoClicker:
 
 
     def click_loop(self) -> None:
-        console = Console()
-        
         mode = "DirectInput" if self.use_directinput else "Standard"
         console.print(f"⚡ Autoclicker [bold green]STARTED[/bold green] ({self.clicks_per_second} CPS - {mode})", style="green")
         
@@ -124,11 +121,9 @@ class SnackSpammer:
         self.stop_event = threading.Event()  # 🔥 NEW
         
         if not KEYBOARD_AVAILABLE:
-            console = Console()
             console.print("[yellow]⚠[/yellow] keyboard module not available for SnackSpammer", style="dim")
-    
+
     def spam_loop(self) -> None:
-        console = Console()
         console.print("🍔 Snack Spammer [bold green]STARTED[/bold green] (Hold TAB to spam 'C')", style="green")
         
         press_count = 0
@@ -165,7 +160,6 @@ class SnackSpammer:
     
     def start(self) -> None:
         if not KEYBOARD_AVAILABLE:
-            console = Console()
             console.print("[red]✗[/red] keyboard module required for SnackSpammer", style="red")
             return
             
