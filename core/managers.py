@@ -318,9 +318,9 @@ class FirewallManager:
 
         time.sleep(0.5)
         if self.rule_exists():
-            console.print("✓ NO SAVING MODE [bold red]ENABLED[/bold red]", style="green")
+            console.print("✓ NO SAVING MODE [bold green]ENABLED[/bold green]", style="green")
             manager.update_status("ON")
-            manager.show_notification("NOSAVE MODE", "Session protection enabled", "#ef4444")
+            manager.show_notification("NOSAVE MODE", "Session protection enabled", "#85BB65")
             sound_manager.play_on()
 
             if self.test_ip_blocked():
@@ -341,9 +341,9 @@ class FirewallManager:
 
         time.sleep(0.5)
         if not self.rule_exists():
-            console.print("✓ NO SAVING MODE [bold green]DISABLED[/bold green]", style="green")
+            console.print("✓ NO SAVING MODE [bold red]DISABLED[/bold red]", style="green")
             manager.update_status("OFF")
-            manager.show_notification("NOSAVE MODE", "Session protection disabled", "#85BB65")
+            manager.show_notification("NOSAVE MODE", "Session protection disabled", "#ef4444")
             sound_manager.play_off()
 
             if not self.test_ip_blocked():

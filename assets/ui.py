@@ -179,39 +179,39 @@ class GTAInteractionMenu(tk.Frame):
 
         # Left accent bar
         self.accent_bar = self.canvas.create_rectangle(
-            0, 0, 12, self.height, 
-            fill=C_GREEN_BRIGHT, outline="", width=0
+            0, 0, 12, self.height,
+            fill=C_RED_BRIGHT, outline="", width=0
         )
 
         # Inner accent line
         self.inner_accent = self.canvas.create_line(
-            12, 0, 12, self.height, 
-            fill=C_GREEN_BRIGHT, width=2
+            12, 0, 12, self.height,
+            fill=C_RED_BRIGHT, width=2
         )
 
         # Feature title
-        self.canvas.create_text(24, 15, text="◆ NOSAVE", font=FONT_HEADER, 
+        self.canvas.create_text(24, 15, text="◆ NOSAVE", font=FONT_HEADER,
                                fill=C_TEXT_GREY, anchor="nw")
 
         # Status text with glow effect
         self.status_glow = self.canvas.create_text(
-            25, 46, text="DISABLED", 
-            font=("Segoe UI", 28, "bold"), 
-            fill=ColorUtil.with_alpha(C_GREEN_BRIGHT, 0.3), 
+            25, 46, text="DISABLED",
+            font=("Segoe UI", 28, "bold"),
+            fill=ColorUtil.with_alpha(C_RED_BRIGHT, 0.3),
             anchor="w"
         )
         self.status_text = self.canvas.create_text(
-            24, 47, text="DISABLED", 
-            font=("Segoe UI", 28, "bold"), 
-            fill=C_GREEN_BRIGHT, anchor="w"
+            24, 47, text="DISABLED",
+            font=("Segoe UI", 28, "bold"),
+            fill=C_RED_BRIGHT, anchor="w"
         )
 
         # Animation state
         self.color_animating = False
         self.shake_amount = 0
         self.shake_offset = 0
-        self.current_color = C_GREEN_BRIGHT
-        self.target_color = C_GREEN_BRIGHT
+        self.current_color = C_RED_BRIGHT
+        self.target_color = C_RED_BRIGHT
         self.anim_step = 0
         self.anim_total = 30
 
@@ -220,12 +220,12 @@ class GTAInteractionMenu(tk.Frame):
         if is_enabled:
             self.canvas.itemconfig(self.status_text, text="ENABLED")
             self.canvas.itemconfig(self.status_glow, text="ENABLED")
-            self.target_color = C_RED_BRIGHT
+            self.target_color = C_GREEN_BRIGHT
             self.shake_amount = 3
         else:
             self.canvas.itemconfig(self.status_text, text="DISABLED")
             self.canvas.itemconfig(self.status_glow, text="DISABLED")
-            self.target_color = C_GREEN_BRIGHT
+            self.target_color = C_RED_BRIGHT
             self.shake_amount = 3
 
         if animated and not self.color_animating:
@@ -288,7 +288,7 @@ class GTAMiniIndicator(tk.Frame):
         self.center = self.size / 2
 
         self.glow_layers = []
-        base_color = C_GREEN_BRIGHT
+        base_color = C_RED_BRIGHT
 
         layer_config = [
             (28, 0.12), (24, 0.20), (20, 0.35),
@@ -315,7 +315,7 @@ class GTAMiniIndicator(tk.Frame):
         self.core = self.canvas.create_oval(
             self.center - 8, self.center - 8,
             self.center + 8, self.center + 8,
-            fill=C_GREEN_BRIGHT, outline="", width=0
+            fill=C_RED_BRIGHT, outline="", width=0
         )
 
         # Highlight
@@ -329,7 +329,7 @@ class GTAMiniIndicator(tk.Frame):
         self.breath_time = 0.0
         self.shimmer_time = 0.0
         self.status = "OFF"
-        self.base_color = C_GREEN_BRIGHT
+        self.base_color = C_RED_BRIGHT
         self._frame_counter = 0
         self._update_interval = 2  # 30 FPS
 
@@ -346,7 +346,7 @@ class GTAMiniIndicator(tk.Frame):
             return
 
         self.status = status
-        self.base_color = C_RED_BRIGHT if status == "ON" else C_GREEN_BRIGHT
+        self.base_color = C_GREEN_BRIGHT if status == "ON" else C_RED_BRIGHT
 
         self.canvas.itemconfig(self.core, fill=self.base_color)
 
