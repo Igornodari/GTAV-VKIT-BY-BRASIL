@@ -63,6 +63,35 @@ Depois é só clicar com o botão direito no `.exe` → **Executar como administ
 
 ---
 
+## ⚠️ Antivírus (leia antes de rodar)
+
+O VKit usa hooks de teclado globais, controla regras de firewall e mata processos do jogo — tudo comportamento normal de uma ferramenta de automação, mas que faz antivírus (principalmente o **Windows Defender**) classificarem o `.exe` ou os `.py` como suspeitos e jogarem em quarentena. É **falso positivo**, o código é aberto e auditável neste repositório.
+
+Para o VKit funcionar direito, você precisa liberar a pasta do projeto no antivírus.
+
+### Windows Defender — restaurar da quarentena
+
+1. Abra **Segurança do Windows** (pesquise no menu Iniciar).
+2. Vá em **Proteção contra vírus e ameaças**.
+3. Clique em **Histórico de proteção**.
+4. Encontre o item do VKit na lista (ex.: `VKit.exe` ou algum `.py` do projeto).
+5. Clique nos **três pontinhos (⋮)** ao lado do item.
+6. Selecione **Criar exclusão** (em algumas versões aparece como "Permitir no dispositivo").
+7. Confirme.
+
+### Recomendado: excluir a pasta inteira (evita cair de novo em quarentena)
+
+1. Em **Proteção contra vírus e ameaças**, clique em **Gerenciar configurações**.
+2. Role até **Exclusões** → **Adicionar ou remover exclusões**.
+3. **Adicionar uma exclusão** → **Pasta**.
+4. Selecione a pasta onde você clonou/extraiu o VKit Toolbox.
+
+### Outro antivírus (Avast, AVG, Kaspersky, Norton, etc.)
+
+O caminho é parecido: procure por **Quarentena** ou **Exceções/Exclusões** nas configurações do seu antivírus e libere a pasta do VKit (ou desative a proteção em tempo real enquanto usa, se preferir).
+
+---
+
 ## Uso básico
 
 ```bash
