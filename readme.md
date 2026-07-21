@@ -7,7 +7,7 @@
 [![Python](https://img.shields.io/badge/Python-3.8+-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/downloads/)
 [![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?style=flat-square&logo=windows&logoColor=white)](https://www.microsoft.com/windows)
 [![License](https://img.shields.io/badge/License-MIT-3DA639?style=flat-square)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-v3.5.0-orange?style=flat-square)](#)
+[![Version](https://img.shields.io/badge/Version-v3.5.1-orange?style=flat-square)](#)
 
 <img width="480" alt="VKit Toolbox overlay" src="https://github.com/user-attachments/assets/2c3e3cab-eb50-4fbc-9722-25aa3609bd5b" />
 
@@ -39,7 +39,21 @@ Tudo roda por hotkeys globais, configuráveis em [`config.yaml`](config.yaml).
 
 ---
 
-## Instalação
+## Download
+
+A forma mais simples de usar: baixe o executável já pronto, sem precisar instalar Python nem nada.
+
+1. Acesse a página de [**Releases**](https://github.com/Igornodari/GTAV-VKIT-BY-BRASIL/releases/latest)
+2. Baixe o `VKit.exe` da versão mais recente (fica em "Assets", no fim da descrição da release)
+3. Clique com o botão direito no arquivo baixado → **Executar como administrador**
+
+> Confira o checksum SHA256 listado na página da release antes de rodar, pra garantir que o arquivo não foi alterado — no PowerShell: `certutil -hashfile VKit.exe SHA256`.
+
+> ⚠️ O Windows Defender (ou outro antivírus) pode acusar o `.exe` como suspeito na primeira execução — isso é esperado, veja a seção [⚠️ Antivírus](#️-antivírus-leia-antes-de-rodar) mais abaixo antes de rodar.
+
+---
+
+## Instalação (a partir do código-fonte)
 
 ```bash
 git clone https://github.com/Igornodari/GTAV-VKIT-BY-BRASIL.git

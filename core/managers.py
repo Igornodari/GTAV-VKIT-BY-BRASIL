@@ -308,6 +308,34 @@ class FirewallManager:
         except Exception:
             return True
 
+    def _add_null_route(self):
+        """Null-route remote_ip at the OS routing table level.
+
+        Some third-party security suites (Norton, McAfee, etc.) install
+        their own network filter driver and take over enforcement from
+        Windows Defender Firewall - rules still get created and show up
+        in wf.msc, but traffic isn't actually blocked. A null route acts
+        one layer below the firewall, so it keeps working even when that
+        happens.
+        """
+        result = subprocess.run(
+            f'route add {self.remote_ip} mask 255.255.255.255 0.0.0.0',
+            shell=True, capture_output=True, text=True,
+            creationflags=subprocess.CREATE_NO_WINDOW
+        )
+        if runtime.debug:
+            print(f"[DEBUG] route add {self.remote_ip}: {result.stdout.strip() or result.stderr.strip()}")
+
+    def _delete_null_route(self):
+        """Remove the null route added by _add_null_route (best effort)."""
+        result = subprocess.run(
+            f'route delete {self.remote_ip}',
+            shell=True, capture_output=True, text=True,
+            creationflags=subprocess.CREATE_NO_WINDOW
+        )
+        if runtime.debug:
+            print(f"[DEBUG] route delete {self.remote_ip}: {result.stdout.strip() or result.stderr.strip()}")
+
     def add_rule(self, manager, sound_manager):
         """Add firewall blocking rule."""
         subprocess.run(
@@ -315,6 +343,7 @@ class FirewallManager:
             f'dir=out action=block remoteip="{self.remote_ip}"',
             shell=True, capture_output=True, creationflags=subprocess.CREATE_NO_WINDOW
         )
+        self._add_null_route()
 
         time.sleep(0.5)
         if self.rule_exists():
@@ -338,6 +367,7 @@ class FirewallManager:
             f'netsh advfirewall firewall delete rule name="{self.rule_name}"',
             shell=True, capture_output=True, creationflags=subprocess.CREATE_NO_WINDOW
         )
+        self._delete_null_route()
 
         time.sleep(0.5)
         if not self.rule_exists():
@@ -363,7 +393,9 @@ class FirewallManager:
             self.add_rule(manager, sound_manager)
 
     def cleanup(self) -> bool:
-        """Cleanup firewall rule on exit."""
+        """Cleanup firewall rule and null route on exit."""
+        self._delete_null_route()
+
         if self.rule_exists():
             subprocess.run(
                 f'netsh advfirewall firewall delete rule name="{self.rule_name}"',

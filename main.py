@@ -31,7 +31,7 @@ from core.state import runtime
 from core.logger import console, logger
 
 # Constants
-VERSION = "v3.5.0"
+VERSION = "v3.5.1"
 APP_TITLE = "VKit - Toolbox"
 
 
@@ -411,22 +411,11 @@ class HotkeyHandler:
         try:
             normalized = self._normalize_key(key)
 
-            if runtime.debug:
-                print(f"[DEBUG] Key pressed: {key} -> {normalized}")
-
             with self._lock:
                 self.current_keys.add(normalized)
 
-                if runtime.debug:
-                    print(f"[DEBUG]   Current keys: {self.current_keys}")
-                    print(
-                        f"[DEBUG]   GTA focused: {self.focus_manager.is_gta_focused()}"
-                    )
-
                 # Skip if focus required but not focused
                 if self.require_game_focus and not self.focus_manager.is_gta_focused():
-                    if runtime.debug:
-                        print("[DEBUG]   GTA not focused - ignoring")
                     return
 
                 # Check hotkey matches - PRIORITIZE LONGEST COMBINATIONS
@@ -458,9 +447,6 @@ class HotkeyHandler:
         """Handle key release"""
         try:
             normalized = self._normalize_key(key)
-
-            if runtime.debug:
-                print(f"[DEBUG] Key released: {key} -> {normalized}")
 
             with self._lock:
                 self.current_keys.discard(normalized)
