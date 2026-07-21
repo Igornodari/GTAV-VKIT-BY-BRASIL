@@ -82,10 +82,10 @@ def calculate(target_number, left_numbers, right_numbers):
                             time.sleep(1.3)
                     raise NotImplementedError
     except:
-        console.print('[*] FIM')
+        console.print('[*] END')
 
 def main(bbox):
-    console.print('[*] Voltagem do Cayo Perico')
+    console.print('[*] Cayo Voltage Hack')
 
     im = ImageGrab.grab(bbox)
     im = im.resize((1920,1080))
@@ -113,5 +113,5 @@ def main(bbox):
         console.print('- ', target_number, left_numbers, right_numbers)
         calculate(target_number, left_numbers, right_numbers)
     except KeyError as e:
-        console.print(f'[!] Número alvo não detectado. {e} - resolução atual {bbox[2]}x{bbox[3]}')
+        console.print(f'[!] Target number not detected. {e} - current resolution {bbox[2]}x{bbox[3]}')
         console.print('=============================================')

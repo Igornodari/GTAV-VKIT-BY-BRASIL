@@ -50,8 +50,8 @@ class AutoClicker:
 
 
     def click_loop(self) -> None:
-        mode = "DirectInput" if self.use_directinput else "Padrão"
-        console.print(f"⚡ Autoclicker [bold green]INICIADO[/bold green] ({self.clicks_per_second} CPS - {mode})", style="green")
+        mode = "DirectInput" if self.use_directinput else "Standard"
+        console.print(f"⚡ Autoclicker [bold green]STARTED[/bold green] ({self.clicks_per_second} CPS - {mode})", style="green")
         
         click_count = 0
         delay = 1.0 / self.clicks_per_second
@@ -72,11 +72,11 @@ class AutoClicker:
                     break
                     
             except Exception as exc:
-                console.print(f"✗ Erro no autoclicker: {exc}", style="red")
+                console.print(f"✗ Autoclicker error: {exc}", style="red")
                 break
 
 
-        console.print(f"⚡ Autoclicker [bold red]PARADO[/bold red] ([cyan]{click_count}[/cyan] cliques)", style="green")
+        console.print(f"⚡ Autoclicker [bold red]STOPPED[/bold red] ([cyan]{click_count}[/cyan] clicks)", style="green")
         console.print()
 
 
@@ -121,10 +121,10 @@ class SnackSpammer:
         self.stop_event = threading.Event()  # 🔥 NEW
         
         if not KEYBOARD_AVAILABLE:
-            console.print("[yellow]⚠[/yellow] módulo keyboard indisponível pro Snack Spammer", style="dim")
+            console.print("[yellow]⚠[/yellow] keyboard module not available for SnackSpammer", style="dim")
 
     def spam_loop(self) -> None:
-        console.print("🍔 Snack Spammer [bold green]INICIADO[/bold green] (Segure TAB pra repetir 'C')", style="green")
+        console.print("🍔 Snack Spammer [bold green]STARTED[/bold green] (Hold TAB to spam 'C')", style="green")
         
         press_count = 0
         
@@ -152,15 +152,15 @@ class SnackSpammer:
                         break
                     
             except Exception as exc:
-                console.print(f"✗ Erro no SnackSpammer: {exc}", style="red")
+                console.print(f"✗ SnackSpammer error: {exc}", style="red")
                 break
-
-        console.print(f"🍔 Snack Spammer [bold red]PARADO[/bold red] ([cyan]{press_count}[/cyan] toques)", style="green")
+        
+        console.print(f"🍔 Snack Spammer [bold red]STOPPED[/bold red] ([cyan]{press_count}[/cyan] presses)", style="green")
         console.print()
-
+    
     def start(self) -> None:
         if not KEYBOARD_AVAILABLE:
-            console.print("[red]✗[/red] módulo keyboard necessário pro SnackSpammer", style="red")
+            console.print("[red]✗[/red] keyboard module required for SnackSpammer", style="red")
             return
             
         if self.active:
@@ -200,7 +200,7 @@ def use_armor_and_snack() -> None:
     """
     if not KEYBOARD_AVAILABLE:
         console.print(
-            "[red]✗[/red] módulo keyboard necessário pro combo Colete + Comida",
+            "[red]✗[/red] keyboard module required for Armor + Snack combo",
             style="red",
         )
         return
@@ -215,7 +215,7 @@ def use_armor_and_snack() -> None:
     finally:
         keyboard.release('tab')
 
-    console.print("🎽 Colete + Comida [bold green]USADO[/bold green]", style="green")
+    console.print("🎽 Armor + Snack [bold green]USED[/bold green]", style="green")
 
 
 class AntiAFK:
@@ -242,9 +242,9 @@ class AntiAFK:
                 kbd.release('s')
                 kbd.release('d')
                 kbd.release('a')
-            console.print("✓ Todas as teclas do Anti-AFK foram soltas", style="dim")
+            console.print("✓ Released all Anti-AFK keys", style="dim")
         except Exception as e:
-            console.print(f"⚠ Erro ao soltar tecla: {e}", style="yellow")
+            console.print(f"⚠ Key release error: {e}", style="yellow")
     
     def _hold_keys(self) -> None:
         """Main anti-AFK loop - alternates between S+A and S+D"""
@@ -256,17 +256,17 @@ class AntiAFK:
                 pdi.keyDown('s')
                 pdi.keyDown('d')
                 self.current_keys = ['s', 'd']  # 🔥 Track
-                console.print("✓ Anti-AFK: Iniciando com S+D", style="green")
+                console.print("✓ Anti-AFK: Starting with S+D", style="green")
                 
                 use_sd = True
                 
                 while not self.stop_event.is_set():
                     # Random wait between 20-30 seconds
                     wait_time = random.uniform(20, 30)
-                    console.print(f"⏳ Anti-AFK: Próxima troca em {wait_time:.1f}s", style="dim")  # 🔥 DEBUG
-
+                    console.print(f"⏳ Anti-AFK: Next switch in {wait_time:.1f}s", style="dim")  # 🔥 DEBUG
+                    
                     if self.stop_event.wait(wait_time):
-                        console.print("🛑 Anti-AFK: Sinal de parada recebido", style="yellow")  # 🔥 DEBUG
+                        console.print("🛑 Anti-AFK: Stop signal received", style="yellow")  # 🔥 DEBUG
                         break
                     
                     # Switch combo
@@ -274,17 +274,17 @@ class AntiAFK:
                         pdi.keyUp('d')
                         pdi.keyDown('a')
                         self.current_keys = ['s', 'a']  # 🔥 Track
-                        console.print("◉ Anti-AFK: Trocado pra S+A", style="cyan")
+                        console.print("◉ Anti-AFK: Switched to S+A", style="cyan")
                         use_sd = False
                     else:
                         pdi.keyUp('a')
                         pdi.keyDown('d')
                         self.current_keys = ['s', 'd']  # 🔥 Track
-                        console.print("◉ Anti-AFK: Trocado pra S+D", style="cyan")
+                        console.print("◉ Anti-AFK: Switched to S+D", style="cyan")
                         use_sd = True
                 
                 # 🔥 IMPROVED - Release all keys on stop
-                console.print("🔓 Soltando teclas...", style="dim")
+                console.print("🔓 Releasing keys...", style="dim")
                 self._release_all_keys()
                 
             elif KEYBOARD_AVAILABLE:
@@ -295,16 +295,16 @@ class AntiAFK:
                 kbd.press('s')
                 kbd.press('d')
                 self.current_keys = ['s', 'd']  # 🔥 Track
-                console.print("✓ Anti-AFK: Iniciando com S+D", style="green")
+                console.print("✓ Anti-AFK: Starting with S+D", style="green")
                 
                 use_sd = True
                 
                 while not self.stop_event.is_set():
                     wait_time = random.uniform(20, 30)
-                    console.print(f"⏳ Anti-AFK: Próxima troca em {wait_time:.1f}s", style="dim")  # 🔥 DEBUG
-
+                    console.print(f"⏳ Anti-AFK: Next switch in {wait_time:.1f}s", style="dim")  # 🔥 DEBUG
+                    
                     if self.stop_event.wait(wait_time):
-                        console.print("🛑 Anti-AFK: Sinal de parada recebido", style="yellow")  # 🔥 DEBUG
+                        console.print("🛑 Anti-AFK: Stop signal received", style="yellow")  # 🔥 DEBUG
                         break
                     
                     # Switch combo
@@ -312,24 +312,24 @@ class AntiAFK:
                         kbd.release('d')
                         kbd.press('a')
                         self.current_keys = ['s', 'a']  # 🔥 Track
-                        console.print("◉ Anti-AFK: Trocado pra S+A", style="cyan")
+                        console.print("◉ Anti-AFK: Switched to S+A", style="cyan")
                         use_sd = False
                     else:
                         kbd.release('a')
                         kbd.press('d')
                         self.current_keys = ['s', 'd']  # 🔥 Track
-                        console.print("◉ Anti-AFK: Trocado pra S+D", style="cyan")
+                        console.print("◉ Anti-AFK: Switched to S+D", style="cyan")
                         use_sd = True
                 
                 # 🔥 IMPROVED - Release all keys on stop
-                console.print("🔓 Soltando teclas...", style="dim")
+                console.print("🔓 Releasing keys...", style="dim")
                 self._release_all_keys()
             
             else:
-                console.print("[red]✗[/red] Nenhuma biblioteca de teclado disponível", style="red")
-
+                console.print("[red]✗[/red] No keyboard library available", style="red")
+                
         except Exception as e:
-            console.print(f"[red]✗[/red] Erro no Anti-AFK: {e}", style="red")
+            console.print(f"[red]✗[/red] Anti-AFK error: {e}", style="red")
             self._release_all_keys()  # 🔥 Cleanup on error too
     
     def toggle(self) -> None:
@@ -349,7 +349,7 @@ class AntiAFK:
         self.thread = threading.Thread(target=self._hold_keys, daemon=True)
         self.thread.start()
         
-        console.print("✓ Anti-AFK [bold green]ATIVADO[/bold green] (Alternando S+D ↔ S+A)", style="green")
+        console.print("✓ Anti-AFK [bold green]ENABLED[/bold green] (Alternating S+D ↔ S+A)", style="green")
         self.sound_manager.play_on()
         console.print()
     
@@ -358,19 +358,19 @@ class AntiAFK:
         if not self.active:
             return
         
-        console.print("⏹ Parando o Anti-AFK...", style="yellow")  # 🔥 DEBUG
-
+        console.print("⏹ Stopping Anti-AFK...", style="yellow")  # 🔥 DEBUG
+        
         self.active = False
         self.stop_event.set()  # Signal thread to stop
-
-        console.print("⏹ Aguardando a thread...", style="yellow")  # 🔥 DEBUG
-
+        
+        console.print("⏹ Waiting for thread...", style="yellow")  # 🔥 DEBUG
+        
         if self.thread:
             self.thread.join(timeout=1.0)
             if self.thread.is_alive():  # 🔥 NEW - Check if thread is stuck
-                console.print("⚠ Thread ainda ativa após 1s, forçando limpeza", style="yellow")
+                console.print("⚠ Thread still alive after 1s, forcing cleanup", style="yellow")
                 self._release_all_keys()  # Force release keys even if thread stuck
-
-        console.print("✓ Anti-AFK [bold red]DESATIVADO[/bold red]", style="green")
+        
+        console.print("✓ Anti-AFK [bold red]DISABLED[/bold red]", style="green")
         self.sound_manager.play_off()
         console.print()

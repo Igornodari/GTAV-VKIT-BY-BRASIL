@@ -13,7 +13,7 @@ import yaml
 from pynput import keyboard
 
 # Local application imports
-from assets.ui import OverlayManager, C_GREEN, C_RED, C_AMBER
+from assets.ui import  OverlayManager
 from assets.settings_window import SettingsWindow
 from tools.autoclicker import AutoClicker, SnackSpammer, AntiAFK, use_armor_and_snack
 from solvers import casinofingerprint, casinokeypad, cayofingerprint, cayovoltage
@@ -31,7 +31,7 @@ from core.state import runtime
 from core.logger import console, logger
 
 # Constants
-VERSION = "v3.6.0"
+VERSION = "v3.5.0"
 APP_TITLE = "VKit - Toolbox"
 
 
@@ -149,7 +149,7 @@ class AppConfig:
         with open(path, "w") as f:
             yaml.dump(default_config, f, default_flow_style=False, sort_keys=False)
 
-        console.print(f"[green]✓[/green] Configuração padrão criada em: {path}")
+        console.print(f"[green]✓[/green] Created default config at: {path}")
 
 
 # ============================================================================
@@ -165,23 +165,23 @@ class SolverManager:
 
     def _run_solver(self, solver_func: Callable, name: str):
         """Generic solver runner"""
-        console.print(f"[cyan]➤[/cyan] Executando {name}...", style="cyan")
-        self.manager.show_notification(name, "Ativo", C_GREEN)
+        console.print(f"[cyan]➤[/cyan] Running {name}...", style="cyan")
+        self.manager.show_notification(name, "Active", "#c084fc")
 
         if bbox := self.manager.get_window_bbox():
             runtime.thread_pool.submit(solver_func, bbox)
 
     def casino_fingerprint(self):
-        self._run_solver(casinofingerprint.main, "SOLVER DE FINGERPRINT DO CASSINO 🎰")
+        self._run_solver(casinofingerprint.main, "CASINO FINGERPRINT SOLVER 🎰")
 
     def casino_keypad(self):
-        self._run_solver(casinokeypad.main, "SOLVER DO TECLADO DO CASSINO 🎰")
+        self._run_solver(casinokeypad.main, "CASINO KEYPAD SOLVER 🎰")
 
     def cayo_fingerprint(self):
-        self._run_solver(cayofingerprint.main, "FINGERPRINT DO CAYO PERICO 🏝️")
+        self._run_solver(cayofingerprint.main, "CAYO PERICO FINGERPRINT 🏝️")
 
     def cayo_voltage(self):
-        self._run_solver(cayovoltage.main, "VOLTAGEM DO CAYO PERICO 🏝️")
+        self._run_solver(cayovoltage.main, "CAYO PERICO VOLTAGE 🏝️")
 
 class ExploitManager:
     """Manages exploit operations"""
@@ -192,14 +192,14 @@ class ExploitManager:
     def job_warp(self):
         """Execute job warp exploit"""
         if not (bbox := self.manager.get_window_bbox()):
-            console.print("[red]✗[/red] Janela do GTA V não encontrada", style="red")
+            console.print("[red]✗[/red] GTA V window not found", style="red")
             self.manager.show_notification(
-                "ERRO", "Janela do GTA V não detectada", C_RED
+                "ERROR", "GTA V window not detected", "#FF3B5C"
             )
             return
 
-        console.print("[cyan]➤[/cyan] Acionando o exploit Job Warp...", style="cyan")
-        self.manager.show_notification("JOB WARP 🚀", "Exploit acionado", C_GREEN)
+        console.print("[cyan]➤[/cyan] Triggering Job Warp exploit...", style="cyan")
+        self.manager.show_notification("JOB WARP 🚀", "Exploit triggered", "#c084fc")
         runtime.thread_pool.submit(jobwarp.main, bbox, self.manager)
 
 
@@ -286,7 +286,7 @@ class HotkeyHandler:
 
         if runtime.debug:
             for action, combo in self.hotkeys.items():
-                print(f"[DEBUG] Analisado {action}: {combo}")
+                print(f"[DEBUG] Parsed {action}: {combo}")
 
     @staticmethod
     def _parse_hotkey(hotkey_str: str) -> frozenset:
@@ -331,7 +331,7 @@ class HotkeyHandler:
         """Handle focus change - stop tools on unfocus"""
         if is_focused:
             if runtime.debug:
-                print("[DEBUG] GTA recuperou o foco - reiniciando o listener...")
+                print("[DEBUG] GTA regained focus - restarting listener...")
 
             with self._lock:
                 self.current_keys.clear()
@@ -358,15 +358,15 @@ class HotkeyHandler:
 
             tools_str = ", ".join(stopped)
             console.print(
-                f"[yellow]⏸[/yellow] Alt+Tab detectado - Parado: {tools_str}",
+                f"[yellow]⏸[/yellow] Alt+Tab detected - Stopped: {tools_str}",
                 style="yellow",
             )
             self.manager.show_notification(
-                "PARADO AUTOMATICAMENTE", f"Ferramentas pausadas: {tools_str}", C_AMBER
+                "AUTO-STOPPED", f"Tools paused: {tools_str}", "#f59e0b"
             )
 
             if runtime.debug:
-                print(f"[DEBUG] Foco perdido - Parado: {tools_str}")
+                print(f"[DEBUG] Focus lost - Stopped: {tools_str}")
 
     def _restart_listener(self):
         """Restart listener + force focus refresh"""
@@ -377,11 +377,11 @@ class HotkeyHandler:
                     try:
                         self._listener.stop()
                         if runtime.debug:
-                            print("[DEBUG] Listener antigo parado")
+                            print("[DEBUG] Stopped old listener")
                     except Exception as e:
-                        logger.exception("Erro ao parar o listener")
+                        logger.exception("Error stopping listener")
                         if runtime.debug:
-                            print(f"[DEBUG] Erro ao parar o listener: {e}")
+                            print(f"[DEBUG] Error stopping listener: {e}")
 
                 time.sleep(0.2)
 
@@ -392,19 +392,19 @@ class HotkeyHandler:
                 self._listener.start()
 
                 if runtime.debug:
-                    print("[DEBUG] ✓ Listener reiniciado")
+                    print("[DEBUG] ✓ Listener restarted")
 
             # Force refresh focus state after restart
             time.sleep(0.1)
             is_focused = self.focus_manager.force_refresh_focus_state()
 
             if runtime.debug:
-                print(f"[DEBUG] Estado de foco após reinício: {is_focused}")
+                print(f"[DEBUG] Focus state after restart: {is_focused}")
 
         except Exception as e:
-            logger.exception("Falha ao reiniciar o listener")
+            logger.exception("Failed to restart listener")
             if runtime.debug:
-                print(f"[DEBUG] Falha ao reiniciar o listener: {e}")
+                print(f"[DEBUG] Failed to restart listener: {e}")
 
     def on_press(self, key):
         """Handle key press"""
@@ -412,21 +412,21 @@ class HotkeyHandler:
             normalized = self._normalize_key(key)
 
             if runtime.debug:
-                print(f"[DEBUG] Tecla pressionada: {key} -> {normalized}")
+                print(f"[DEBUG] Key pressed: {key} -> {normalized}")
 
             with self._lock:
                 self.current_keys.add(normalized)
 
                 if runtime.debug:
-                    print(f"[DEBUG]   Teclas atuais: {self.current_keys}")
+                    print(f"[DEBUG]   Current keys: {self.current_keys}")
                     print(
-                        f"[DEBUG]   GTA em foco: {self.focus_manager.is_gta_focused()}"
+                        f"[DEBUG]   GTA focused: {self.focus_manager.is_gta_focused()}"
                     )
 
                 # Skip if focus required but not focused
                 if self.require_game_focus and not self.focus_manager.is_gta_focused():
                     if runtime.debug:
-                        print("[DEBUG]   GTA sem foco - ignorando")
+                        print("[DEBUG]   GTA not focused - ignoring")
                     return
 
                 # Check hotkey matches - PRIORITIZE LONGEST COMBINATIONS
@@ -445,14 +445,14 @@ class HotkeyHandler:
                     self.triggered.add(action)
 
                     if runtime.debug:
-                        print(f"[DEBUG] ✓✓✓ ATALHO CORRESPONDENTE: {action}")
+                        print(f"[DEBUG] ✓✓✓ HOTKEY MATCHED: {action}")
 
                     runtime.thread_pool.submit(self._handle_action, action)
 
         except Exception as e:
-            logger.exception("Erro no pressionamento de tecla")
+            logger.exception("Key press error")
             if runtime.debug:
-                print(f"[DEBUG] Erro no pressionamento de tecla: {e}")
+                print(f"[DEBUG] Key press error: {e}")
 
     def on_release(self, key):
         """Handle key release"""
@@ -460,7 +460,7 @@ class HotkeyHandler:
             normalized = self._normalize_key(key)
 
             if runtime.debug:
-                print(f"[DEBUG] Tecla solta: {key} -> {normalized}")
+                print(f"[DEBUG] Key released: {key} -> {normalized}")
 
             with self._lock:
                 self.current_keys.discard(normalized)
@@ -477,12 +477,12 @@ class HotkeyHandler:
                     self.triggered.discard(action)
 
                 if runtime.debug and to_clear:
-                    print(f"[DEBUG]   Combinações limpas: {to_clear}")
+                    print(f"[DEBUG]   Cleared combos: {to_clear}")
 
         except Exception as e:
-            logger.exception("Erro ao soltar tecla")
+            logger.exception("Key release error")
             if runtime.debug:
-                print(f"[DEBUG] Erro ao soltar tecla: {e}")
+                print(f"[DEBUG] Key release error: {e}")
 
     def _handle_action(self, action: str):
         """Route action to appropriate handler"""
@@ -495,10 +495,10 @@ class HotkeyHandler:
             "open_settings": self._toggle_settings_window,
             "armor_snack_combo": self._use_armor_and_snack,
             "autoclicker": lambda: self._toggle_tool(
-                self.autoclicker, "AUTOCLICKER ⚡"
+                self.autoclicker, "AUTO CLICKER ⚡"
             ),
             "snack_spammer": lambda: self._toggle_tool(
-                self.snack_spammer, "SNACK SPAMMER 🍔", " (Segure TAB)"
+                self.snack_spammer, "SNACK SPAMMER 🍔", " (Hold TAB)"
             ),
             "anti_afk": lambda: self._toggle_tool(
                 self.anti_afk, "ANTI-AFK 🎮", " (S+A ↔ S+D)"
@@ -517,9 +517,9 @@ class HotkeyHandler:
             try:
                 handler()
             except Exception as e:
-                logger.exception("Erro no handler da ação (%s)", action)
+                logger.exception("Action handler error (%s)", action)
                 if runtime.debug:
-                    print(f"[DEBUG] Erro no handler da ação: {e}")
+                    print(f"[DEBUG] Action handler error: {e}")
 
     def _toggle_overlay(self):
         """Toggle overlay mode"""
@@ -528,26 +528,26 @@ class HotkeyHandler:
 
         if self.manager.show_full:
             console.print(
-                "◉ Alternado pro modo de overlay [bold cyan]CHEIO[/bold cyan]", style="blue"
+                "◉ Switched to [bold cyan]FULL[/bold cyan] overlay mode", style="blue"
             )
             self.manager.show_notification(
-                "MODO OVERLAY", "Exibição completa ativada", C_GREEN
+                "OVERLAY MODE", "Full display enabled", "#3b82f6"
             )
         else:
             console.print(
-                "◉ Alternado pro modo de overlay [bold cyan]MINI[/bold cyan]", style="blue"
+                "◉ Switched to [bold cyan]MINI[/bold cyan] overlay mode", style="blue"
             )
             self.manager.show_notification(
-                "MODO OVERLAY", "Indicador compacto ativo", C_GREEN
+                "OVERLAY MODE", "Compact indicator active", "#3b82f6"
             )
         console.print()
 
     def _toggle_debug(self):
         """Toggle debug mode"""
         runtime.debug = not runtime.debug
-        status = "ATIVADO" if runtime.debug else "DESATIVADO"
-        console.print(f"🐛 MODO DEBUG [bold]{status}[/bold]", style="yellow")
-        self.manager.show_notification("MODO DEBUG 🐛", status, C_AMBER)
+        status = "ENABLED" if runtime.debug else "DISABLED"
+        console.print(f"🐛 DEBUG MODE [bold]{status}[/bold]", style="yellow")
+        self.manager.show_notification("DEBUG MODE 🐛", status, "#f59e0b")
         console.print()
 
     def _toggle_settings_window(self):
@@ -555,7 +555,7 @@ class HotkeyHandler:
         if not self.settings_window:
             return
 
-        console.print("🛠️  Alternando painel de configurações...", style="cyan")
+        console.print("🛠️  Toggling settings panel...", style="cyan")
         # Tkinter widgets can only be touched from the main/mainloop thread,
         # but this handler runs on the hotkey thread pool - schedule it.
         self.settings_window.request_toggle()
@@ -563,23 +563,23 @@ class HotkeyHandler:
     def _use_armor_and_snack(self):
         """Quick one-shot combo: use armor then snack (CTRL+X)"""
         use_armor_and_snack()
-        self.manager.show_notification("COLETE + COMIDA 🎽", "Combo usado", C_GREEN)
+        self.manager.show_notification("COLETE + COMIDA 🎽", "Combo usado", "#82D668")
 
     def _toggle_tool(self, tool, name: str, extra: str = ""):
         """Toggle tool on/off"""
         tool.toggle()
         if tool.active:
-            console.print(f"[bold green]✓ {name} ATIVADO{extra}[/bold green]")
-            self.manager.show_notification(name, f"ATIVADO{extra}", C_GREEN)
+            console.print(f"[bold green]✓ {name} ENABLED{extra}[/bold green]")
+            self.manager.show_notification(name, f"ENABLED{extra}", "#82D668")
         else:
-            console.print(f"[bold red]✗ {name} DESATIVADO[/bold red]")
-            self.manager.show_notification(name, "DESATIVADO", C_RED)
+            console.print(f"[bold red]✗ {name} DISABLED[/bold red]")
+            self.manager.show_notification(name, "DISABLED", "#FF3B5C")
         console.print()
 
     def start_listening(self):
         """Start keyboard listener"""
         if runtime.debug:
-            print("[DEBUG] Iniciando o listener de teclado...")
+            print("[DEBUG] Starting initial keyboard listener...")
 
         try:
             with self._listener_lock:
@@ -589,7 +589,7 @@ class HotkeyHandler:
                 self._listener.start()
 
             if runtime.debug:
-                print("[DEBUG] ✓ Listener iniciado")
+                print("[DEBUG] ✓ Listener started")
 
             while self._should_run:
                 time.sleep(1)
@@ -614,7 +614,7 @@ def cleanup(autoclicker, snack_spammer, anti_afk, firewall_manager):
             tool.stop()
 
     if firewall_manager.cleanup():
-        console.print("\n✓ Limpeza: regra de firewall removida", style="green")
+        console.print("\n✓ Cleanup: Firewall rule removed", style="green")
 
 
 def disable_console_quickedit():
@@ -644,23 +644,23 @@ def disable_console_quickedit():
         kernel32.SetConsoleMode(h_console, new_mode)
 
         if runtime.debug:
-            print(f"[DEBUG] Modo do console alterado: {mode.value:04x} -> {new_mode:04x}")
+            print(f"[DEBUG] Console mode changed: {mode.value:04x} -> {new_mode:04x}")
 
     except Exception as e:
-        logger.exception("Falha ao desativar o QuickEdit")
+        logger.exception("Failed to disable QuickEdit")
         if runtime.debug:
-            print(f"[DEBUG] Falha ao desativar o QuickEdit: {e}")
+            print(f"[DEBUG] Failed to disable QuickEdit: {e}")
 
 
 def global_exception_handler(exc_type, exc_value, exc_traceback):
     """Global exception handler to prevent crashes"""
     logger.error(
-        "Exceção não tratada", exc_info=(exc_type, exc_value, exc_traceback)
+        "Unhandled exception", exc_info=(exc_type, exc_value, exc_traceback)
     )
     if runtime.debug:
         sys.__excepthook__(exc_type, exc_value, exc_traceback)
     else:
-        console.print(f"[red]✗ Erro crítico: {exc_value}[/red]")
+        console.print(f"[red]✗ Critical error: {exc_value}[/red]")
 
 
 # ============================================================================
@@ -675,7 +675,7 @@ def main():
 
     if "--debug" in sys.argv:
         runtime.debug = True
-        console.print("[bold yellow]🐛 MODO DEBUG ATIVADO[/bold yellow]")
+        console.print("[bold yellow]🐛 DEBUG MODE ENABLED[/bold yellow]")
         console.print()
 
     # ⭐ UPDATED: Pass BASE_DIR parameter
@@ -707,13 +707,13 @@ def main():
     UIManager.print_header(APP_TITLE, VERSION)
 
     # Check for updates
-    console.print("[dim]⏳ Verificando atualizações...[/dim]", end="")
+    console.print("[dim]⏳ Checking for updates...[/dim]", end="")
     update_checker = UpdateChecker(VERSION)
     if update_checker.check_for_updates():
         console.print(" [yellow]✓[/yellow]")
         update_checker.print_update_notification()
     else:
-        console.print(" [green]✓[/green] [dim](atualizado)[/dim]")
+        console.print(" [green]✓[/green] [dim](up to date)[/dim]")
     console.print()
 
     UIManager.print_hotkeys(config.hotkeys)
@@ -750,10 +750,10 @@ def main():
     try:
         overlay_manager.start()
     except KeyboardInterrupt:
-        console.print("\n[yellow]⚠[/yellow] Encerrando...", style="bold")
+        console.print("\n[yellow]⚠[/yellow] Shutting down...", style="bold")
     finally:
         runtime.thread_pool.shutdown(wait=False)
-        console.print("✓ Script encerrado com sucesso\n", style="green bold")
+        console.print("✓ Script terminated successfully\n", style="green bold")
 
 
 if __name__ == "__main__":
