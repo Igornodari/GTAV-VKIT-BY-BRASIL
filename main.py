@@ -15,7 +15,7 @@ from pynput import keyboard
 # Local application imports
 from assets.ui import  OverlayManager
 from assets.settings_window import SettingsWindow
-from tools.autoclicker import AutoClicker, SnackSpammer, AntiAFK, use_armor_and_snack
+from tools.autoclicker import AutoClicker, SnackSpammer, AntiAFK, ArmorSnackSpammer
 from solvers import casinofingerprint, casinokeypad, cayofingerprint, cayovoltage
 from exploits import jobwarp
 
@@ -31,7 +31,7 @@ from core.state import runtime
 from core.logger import console, logger
 
 # Constants
-VERSION = "v3.5.1"
+VERSION = "v3.5.2"
 APP_TITLE = "VKit - Toolbox"
 
 
@@ -245,6 +245,7 @@ class HotkeyHandler:
         autoclicker: AutoClicker,
         snack_spammer: SnackSpammer,
         anti_afk: AntiAFK,
+        armor_snack_spammer: ArmorSnackSpammer,
         solver_manager: SolverManager,
         exploit_manager: ExploitManager,
         settings_window=None,
@@ -257,6 +258,7 @@ class HotkeyHandler:
         self.autoclicker = autoclicker
         self.snack_spammer = snack_spammer
         self.anti_afk = anti_afk
+        self.armor_snack_spammer = armor_snack_spammer
         self.solver_manager = solver_manager
         self.exploit_manager = exploit_manager
         self.settings_window = settings_window
@@ -345,6 +347,7 @@ class HotkeyHandler:
             (self.autoclicker, "Auto Clicker"),
             (self.snack_spammer, "Snack Spammer"),
             (self.anti_afk, "Anti-AFK"),
+            (self.armor_snack_spammer, "Colete + Comida"),
         ]
 
         stopped = [
@@ -479,7 +482,9 @@ class HotkeyHandler:
             ),
             "debug_toggle": self._toggle_debug,
             "open_settings": self._toggle_settings_window,
-            "armor_snack_combo": self._use_armor_and_snack,
+            "armor_snack_combo": lambda: self._toggle_tool(
+                self.armor_snack_spammer, "COLETE + COMIDA 🎽", " (Segure TAB)"
+            ),
             "autoclicker": lambda: self._toggle_tool(
                 self.autoclicker, "AUTO CLICKER ⚡"
             ),
@@ -546,11 +551,6 @@ class HotkeyHandler:
         # but this handler runs on the hotkey thread pool - schedule it.
         self.settings_window.request_toggle()
 
-    def _use_armor_and_snack(self):
-        """Quick one-shot combo: use armor then snack (CTRL+X)"""
-        use_armor_and_snack()
-        self.manager.show_notification("COLETE + COMIDA 🎽", "Combo usado", "#82D668")
-
     def _toggle_tool(self, tool, name: str, extra: str = ""):
         """Toggle tool on/off"""
         tool.toggle()
@@ -593,9 +593,9 @@ class HotkeyHandler:
 # ============================================================================
 
 
-def cleanup(autoclicker, snack_spammer, anti_afk, firewall_manager):
+def cleanup(autoclicker, snack_spammer, anti_afk, armor_snack_spammer, firewall_manager):
     """Cleanup resources on exit"""
-    for tool in (autoclicker, snack_spammer, anti_afk):
+    for tool in (autoclicker, snack_spammer, anti_afk, armor_snack_spammer):
         if tool.active:
             tool.stop()
 
@@ -684,6 +684,7 @@ def main():
     autoclicker = AutoClicker(sound_manager)
     snack_spammer = SnackSpammer(sound_manager)
     anti_afk = AntiAFK(sound_manager)
+    armor_snack_spammer = ArmorSnackSpammer(sound_manager)
 
     # Initialize feature managers
     solver_manager = SolverManager(overlay_manager)
@@ -718,6 +719,7 @@ def main():
         autoclicker,
         snack_spammer,
         anti_afk,
+        armor_snack_spammer,
         solver_manager,
         exploit_manager,
         settings_window=settings_window,
@@ -725,7 +727,9 @@ def main():
     settings_window.attach_hotkey_handler(hotkey_handler)
 
     # Register cleanup
-    atexit.register(cleanup, autoclicker, snack_spammer, anti_afk, firewall_manager)
+    atexit.register(
+        cleanup, autoclicker, snack_spammer, anti_afk, armor_snack_spammer, firewall_manager
+    )
 
     # Start listener thread
     threading.Thread(

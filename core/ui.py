@@ -25,23 +25,23 @@ from core.logger import console
 # console table (UIManager.print_hotkeys) and the in-game settings panel
 # (assets/settings_window.py). (None, None) rows render as blank separators.
 HOTKEY_DESCRIPTIONS = [
-    ("toggle_overlay", "Toggle overlay mode (Full ↔ Mini)"),
-    ("toggle_nosave", "Toggle NOSAVE (ON ↔ OFF)"),
-    ("debug_toggle", "🐛 Toggle Debug Mode"),
+    ("toggle_overlay", "Alternar modo do overlay (Completo ↔ Mini)"),
+    ("toggle_nosave", "Alternar NOSAVE (Ativado ↔ Desativado)"),
+    ("debug_toggle", "🐛 Alternar Modo Debug"),
     ("open_settings", "🛠️ Abrir painel de atalhos"),
     (None, None),
-    ("autoclicker", "⚡ Toggle Fast Autoclicker (50 CPS)"),
-    ("snack_spammer", "🍔 Toggle Snack Spammer (Hold TAB)"),
-    ("armor_snack_combo", "🎽 Usar Colete + Comida (combo rápido)"),
-    ("anti_afk", "🎮 Toggle Anti-AFK (S+A ↔ S+D)"),
-    ("kill_gta", "💀 Kill GTA5 Process (Instant)"),
+    ("autoclicker", "⚡ Alternar Autoclicker Rápido (70 CPS)"),
+    ("snack_spammer", "🍔 Alternar Spam de Comida (Segure TAB)"),
+    ("armor_snack_combo", "🎽 Alternar Colete + Comida (Segure TAB)"),
+    ("anti_afk", "🎮 Alternar Anti-AFK (S+A ↔ S+D)"),
+    ("kill_gta", "💀 Encerrar Processo do GTA V (Instantâneo)"),
     (None, None),
-    ("job_warp", "🚀 Job Warp Exploit (Toggle)"),
+    ("job_warp", "🚀 Exploit Job Warp (Alternar)"),
     (None, None),
-    ("casino_fingerprint", "Casino Fingerprint Solver"),
-    ("casino_keypad", "Casino Keypad Solver"),
-    ("cayo_fingerprint", "Cayo Perico Fingerprint Solver"),
-    ("cayo_voltage", "Cayo Perico Voltage Solver"),
+    ("casino_fingerprint", "Solver de Impressão Digital do Cassino"),
+    ("casino_keypad", "Solver de Teclado do Cassino"),
+    ("cayo_fingerprint", "Solver de Impressão Digital do Cayo Perico"),
+    ("cayo_voltage", "Solver de Voltagem do Cayo Perico"),
 ]
 
 
@@ -149,12 +149,12 @@ class UIManager:
     def print_hotkeys(hotkeys: dict):
         """Print hotkeys table."""
         hotkeys_table = Table(
-            title="🎮  [bold]Hotkeys[/bold]",
+            title="🎮  [bold]Atalhos[/bold]",
             box=box.ROUNDED, border_style="magenta",
             show_header=True, header_style="bold magenta", width=70
         )
-        hotkeys_table.add_column("Shortcut", style="bold magenta", width=25)
-        hotkeys_table.add_column("Action", style="white", width=38)
+        hotkeys_table.add_column("Atalho", style="bold magenta", width=25)
+        hotkeys_table.add_column("Ação", style="white", width=38)
 
         for action, description in HOTKEY_DESCRIPTIONS:
             if action is None:
@@ -174,10 +174,10 @@ class UIManager:
     def print_status(debug_hotkey: str):
         """Print running status."""
         console.print(Panel(
-            "[bold green]●[/bold green] Script is running... "
-            "Press [bold red]CTRL+C[/bold red] to exit\n"
-            f"[dim]Press {UIManager._format_hotkey(debug_hotkey)} "
-            "to toggle debug mode[/dim]",
+            "[bold green]●[/bold green] Script em execução... "
+            "Pressione [bold red]CTRL+C[/bold red] para sair\n"
+            f"[dim]Pressione {UIManager._format_hotkey(debug_hotkey)} "
+            "para alternar o modo debug[/dim]",
             box=box.HEAVY, border_style="bright_green",
             width=70, padding=(0, 2)
         ))

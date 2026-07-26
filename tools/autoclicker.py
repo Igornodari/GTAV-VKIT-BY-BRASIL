@@ -192,30 +192,84 @@ class SnackSpammer:
             self.start()
 
 
-def use_armor_and_snack() -> None:
-    """One-shot combo: hold TAB, select armor then snack, release TAB.
+class ArmorSnackSpammer:
+    """Toggleable combo: while active and TAB is held, alternately spams
+    'v' (colete) and 'c' (comida) so both use-bars fill on their own -
+    no more manually mashing V/C while holding TAB."""
 
-    Unlike SnackSpammer this doesn't loop/spam - armor isn't a stackable
-    consumable, so a single press of each is enough.
-    """
-    if not KEYBOARD_AVAILABLE:
-        console.print(
-            "[red]✗[/red] keyboard module required for Armor + Snack combo",
-            style="red",
-        )
-        return
+    def __init__(self, sound_manager) -> None:
+        self.active = False
+        self.thread: threading.Thread | None = None
+        self.sound_manager = sound_manager
+        self.spam_delay = 0.05  # 50ms between presses
+        self.stop_event = threading.Event()
 
-    try:
-        keyboard.press('tab')
-        time.sleep(0.05)
-        keyboard.press_and_release('v')
-        time.sleep(0.05)
-        keyboard.press_and_release('c')
-        time.sleep(0.05)
-    finally:
-        keyboard.release('tab')
+        if not KEYBOARD_AVAILABLE:
+            console.print("[yellow]⚠[/yellow] keyboard module not available for ArmorSnackSpammer", style="dim")
 
-    console.print("🎽 Armor + Snack [bold green]USED[/bold green]", style="green")
+    def _tap(self, key: str) -> bool:
+        """Press+release one key, sleeping between. Returns False if a stop
+        was requested during the sleeps (caller should bail out)."""
+        keyboard.press(key)
+        if self.stop_event.wait(timeout=self.spam_delay):
+            keyboard.release(key)
+            return False
+        keyboard.release(key)
+        return not self.stop_event.wait(timeout=self.spam_delay)
+
+    def spam_loop(self) -> None:
+        console.print("🎽 Colete + Comida [bold green]STARTED[/bold green] (Hold TAB to spam 'V'/'C')", style="green")
+
+        press_count = 0
+        keys = ('v', 'c')
+
+        while self.active and not self.stop_event.is_set():
+            try:
+                if keyboard.is_pressed('tab'):
+                    key = keys[press_count % 2]
+                    if not self._tap(key):
+                        break
+                    press_count += 1
+                else:
+                    if self.stop_event.wait(timeout=0.1):
+                        break
+
+            except Exception as exc:
+                console.print(f"✗ ArmorSnackSpammer error: {exc}", style="red")
+                break
+
+        console.print(f"🎽 Colete + Comida [bold red]STOPPED[/bold red] ([cyan]{press_count}[/cyan] presses)", style="green")
+        console.print()
+
+    def start(self) -> None:
+        if not KEYBOARD_AVAILABLE:
+            console.print("[red]✗[/red] keyboard module required for Colete + Comida", style="red")
+            return
+
+        if self.active:
+            return
+
+        self.active = True
+        self.stop_event.clear()
+        self.thread = threading.Thread(target=self.spam_loop, daemon=True)
+        self.thread.start()
+        self.sound_manager.play_on()
+
+    def stop(self) -> None:
+        if not self.active:
+            return
+
+        self.active = False
+        self.stop_event.set()
+        if self.thread and self.thread.is_alive():
+            self.thread.join(timeout=1.0)
+        self.sound_manager.play_off()
+
+    def toggle(self) -> None:
+        if self.active:
+            self.stop()
+        else:
+            self.start()
 
 
 class AntiAFK:
