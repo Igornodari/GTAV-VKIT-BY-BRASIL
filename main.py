@@ -24,7 +24,10 @@ from core.managers import (
     SoundManager,
     FirewallManager,
     ProcessManager,
-    GameDetector
+    GameDetector,
+    validate_ip,
+    validate_port,
+    validate_rule_name,
 )
 from core.ui import UIManager, UpdateChecker
 from core.state import runtime
@@ -92,9 +95,9 @@ class AppConfig:
         hotkeys.setdefault("armor_snack_combo", "ctrl+x")
 
         return cls(
-            rule_name=fw["rule_name"],
-            remote_ip=fw["remote_ip"],
-            test_port=fw["test_port"],
+            rule_name=validate_rule_name(fw["rule_name"]),
+            remote_ip=validate_ip(fw["remote_ip"]),
+            test_port=validate_port(fw["test_port"]),
             hotkeys=hotkeys,
             require_game_focus=config.get("require_game_focus", True),
             auto_stop_on_unfocus=config.get("auto_stop_on_unfocus", True),

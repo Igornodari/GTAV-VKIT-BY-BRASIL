@@ -6,6 +6,8 @@ sound effects, firewall rules, and process operations.
 """
 
 import ctypes
+import ipaddress
+import re
 import socket
 import subprocess
 import sys
@@ -21,6 +23,36 @@ import win32process
 
 from core.state import runtime
 from core.logger import console
+
+_RULE_NAME_RE = re.compile(r"^[A-Za-z0-9 _.-]{1,128}$")
+_PROCESS_NAME_RE = re.compile(r"^[A-Za-z0-9 _.-]{1,128}$")
+
+
+def validate_rule_name(rule_name: str) -> str:
+    """Return rule_name if it only contains safe characters, else raise."""
+    if not isinstance(rule_name, str) or not _RULE_NAME_RE.match(rule_name):
+        raise ValueError(f"Invalid firewall rule name: {rule_name!r}")
+    return rule_name
+
+
+def validate_ip(remote_ip: str) -> str:
+    """Return remote_ip if it is a valid IPv4 address, else raise."""
+    return str(ipaddress.IPv4Address(remote_ip))
+
+
+def validate_port(port) -> int:
+    """Return port as an int in the valid TCP range, else raise."""
+    port = int(port)
+    if not 1 <= port <= 65535:
+        raise ValueError(f"Invalid port: {port}")
+    return port
+
+
+def validate_process_name(process_name: str) -> str:
+    """Return process_name if it only contains safe characters, else raise."""
+    if not isinstance(process_name, str) or not _PROCESS_NAME_RE.match(process_name):
+        raise ValueError(f"Invalid process name: {process_name!r}")
+    return process_name
 
 class GameDetector:
     def __init__(self, process_prefix: str = "GTA5", poll_interval: float = 0.5, timeout: Optional[float] = None):
@@ -268,9 +300,9 @@ class FirewallManager:
     """Manages Windows firewall rules."""
 
     def __init__(self, rule_name: str, remote_ip: str, test_port: int):
-        self.rule_name = rule_name
-        self.remote_ip = remote_ip
-        self.test_port = test_port
+        self.rule_name = validate_rule_name(rule_name)
+        self.remote_ip = validate_ip(remote_ip)
+        self.test_port = validate_port(test_port)
 
     def rule_exists(self) -> bool:
         """Check if the firewall rule exists without depending on Windows language."""
@@ -319,8 +351,8 @@ class FirewallManager:
         happens.
         """
         result = subprocess.run(
-            f'route add {self.remote_ip} mask 255.255.255.255 0.0.0.0',
-            shell=True, capture_output=True, text=True,
+            ['route', 'add', self.remote_ip, 'mask', '255.255.255.255', '0.0.0.0'],
+            shell=False, capture_output=True, text=True,
             creationflags=subprocess.CREATE_NO_WINDOW
         )
         if runtime.debug:
@@ -329,8 +361,8 @@ class FirewallManager:
     def _delete_null_route(self):
         """Remove the null route added by _add_null_route (best effort)."""
         result = subprocess.run(
-            f'route delete {self.remote_ip}',
-            shell=True, capture_output=True, text=True,
+            ['route', 'delete', self.remote_ip],
+            shell=False, capture_output=True, text=True,
             creationflags=subprocess.CREATE_NO_WINDOW
         )
         if runtime.debug:
@@ -339,9 +371,12 @@ class FirewallManager:
     def add_rule(self, manager, sound_manager):
         """Add firewall blocking rule."""
         subprocess.run(
-            f'netsh advfirewall firewall add rule name="{self.rule_name}" '
-            f'dir=out action=block remoteip="{self.remote_ip}"',
-            shell=True, capture_output=True, creationflags=subprocess.CREATE_NO_WINDOW
+            [
+                'netsh', 'advfirewall', 'firewall', 'add', 'rule',
+                f'name={self.rule_name}', 'dir=out', 'action=block',
+                f'remoteip={self.remote_ip}',
+            ],
+            shell=False, capture_output=True, creationflags=subprocess.CREATE_NO_WINDOW
         )
         self._add_null_route()
 
@@ -364,8 +399,8 @@ class FirewallManager:
     def delete_rule(self, manager, sound_manager):
         """Remove firewall blocking rule."""
         subprocess.run(
-            f'netsh advfirewall firewall delete rule name="{self.rule_name}"',
-            shell=True, capture_output=True, creationflags=subprocess.CREATE_NO_WINDOW
+            ['netsh', 'advfirewall', 'firewall', 'delete', 'rule', f'name={self.rule_name}'],
+            shell=False, capture_output=True, creationflags=subprocess.CREATE_NO_WINDOW
         )
         self._delete_null_route()
 
@@ -398,8 +433,8 @@ class FirewallManager:
 
         if self.rule_exists():
             subprocess.run(
-                f'netsh advfirewall firewall delete rule name="{self.rule_name}"',
-                shell=True, capture_output=True, creationflags=subprocess.CREATE_NO_WINDOW
+                ['netsh', 'advfirewall', 'firewall', 'delete', 'rule', f'name={self.rule_name}'],
+                shell=False, capture_output=True, creationflags=subprocess.CREATE_NO_WINDOW
             )
             return True
         return False
@@ -445,9 +480,10 @@ class ProcessManager:
     def kill_process(process_name: str, manager):
         """Kill a process by name."""
         try:
+            process_name = validate_process_name(process_name)
             result = subprocess.run(
-                f'taskkill /F /IM {process_name}',
-                shell=True, capture_output=True, text=True,
+                ['taskkill', '/F', '/IM', process_name],
+                shell=False, capture_output=True, text=True,
                 creationflags=subprocess.CREATE_NO_WINDOW
             )
 
