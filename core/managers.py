@@ -20,7 +20,7 @@ import win32gui
 import win32process
 
 from core.state import runtime
-from core.logger import console
+from core.logger import console, logger
 
 class GameDetector:
     def __init__(self, process_prefix: str = "GTA5", poll_interval: float = 0.5, timeout: Optional[float] = None):
@@ -101,6 +101,7 @@ class WindowFocusManager:
 
                 return process, title
             except Exception:
+                logger.exception("Failed to read window info for hwnd %r", hwnd)
                 return None, ""
 
     def _check_is_gta(self, process_name: Optional[str], title: str) -> bool:
@@ -124,9 +125,10 @@ class WindowFocusManager:
             if is_gta != self._is_focused:
                 self._is_focused = is_gta
                 for callback in self._callbacks[:]:
-                    runtime.thread_pool.submit(self._safe_callback, callback, is_gta)
+                    runtime.submit(self._safe_callback, callback, is_gta)
 
         except Exception as e:
+            logger.exception("Focus hook error")
             if runtime.debug:
                 print(f"[DEBUG] Focus hook error: {e}")
 
@@ -136,6 +138,7 @@ class WindowFocusManager:
         try:
             callback(is_focused)
         except Exception as e:
+            logger.exception("Focus callback error")
             if runtime.debug:
                 print(f"[DEBUG] Focus callback error: {e}")
 
@@ -163,10 +166,11 @@ class WindowFocusManager:
             # Trigger callbacks if state changed
             if is_gta != old_state:
                 for callback in self._callbacks[:]:
-                    runtime.thread_pool.submit(self._safe_callback, callback, is_gta)
+                    runtime.submit(self._safe_callback, callback, is_gta)
 
             return is_gta
         except Exception as e:
+            logger.exception("Force refresh error")
             if runtime.debug:
                 print(f"[DEBUG] Force refresh error: {e}")
             return self._is_focused
@@ -194,7 +198,7 @@ class WindowFocusManager:
                     self._on_window_focus_change(None, self.EVENT_SYSTEM_FOREGROUND, 
                                                 hwnd, 0, 0, 0, 0)
                 except Exception:
-                    pass
+                    logger.exception("Failed to seed initial focus state")
 
                 # Message loop
                 msg = ctypes.wintypes.MSG()
@@ -206,6 +210,7 @@ class WindowFocusManager:
                         self._shutdown.wait(0.1)
 
             except Exception as e:
+                logger.exception("Hook thread error")
                 if runtime.debug:
                     print(f"[DEBUG] Hook thread error: {e}")
             finally:
@@ -240,7 +245,7 @@ class SoundManager:
     def play(self, sound_type: str):
         """Play sound asynchronously."""
         if path := self.sounds.get(sound_type):
-            runtime.thread_pool.submit(self._play_sound, path)
+            runtime.submit(self._play_sound, path)
 
     @staticmethod
     def _play_sound(path: str):
@@ -248,7 +253,7 @@ class SoundManager:
         try:
             winsound.PlaySound(path, winsound.SND_FILENAME | winsound.SND_ASYNC)
         except Exception:
-            pass
+            logger.warning("Failed to play sound %s", path, exc_info=True)
 
     def play_on(self):
         self.play('on')
@@ -306,6 +311,10 @@ class FirewallManager:
                 sock.settimeout(timeout)
                 return sock.connect_ex((self.remote_ip, self.test_port)) != 0
         except Exception:
+            logger.warning(
+                "Connectivity probe to %s:%s failed; assuming blocked",
+                self.remote_ip, self.test_port, exc_info=True,
+            )
             return True
 
     def _add_null_route(self):
@@ -418,6 +427,7 @@ class ProcessManager:
         try:
             return bool(ctypes.windll.shell32.IsUserAnAdmin())
         except Exception:
+            logger.warning("IsUserAnAdmin check failed; assuming non-admin", exc_info=True)
             return False
 
     @staticmethod
@@ -437,6 +447,7 @@ class ProcessManager:
         try:
             ctypes.windll.shell32.ShellExecuteW(None, "runas", executable, params, current_dir, 1)
         except Exception as e:
+            logger.exception("Failed to elevate to admin")
             console.print(f"[red]Failed to elevate: {e}[/red]")
 
         sys.exit()
@@ -464,6 +475,7 @@ class ProcessManager:
                     f"{process_name} is not running", "#f59e0b"
                 )
         except Exception as e:
+            logger.exception("Failed to kill process %s", process_name)
             console.print(f"✗ Failed to kill {process_name}: {e}", style="red")
             manager.show_notification("ERROR", f"Failed to terminate {process_name}", "#ef4444")
         console.print()

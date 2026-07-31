@@ -2,7 +2,7 @@ import threading
 import time
 import random
 
-from core.logger import console
+from core.logger import console, logger
 
 try:
     import pydirectinput
@@ -72,6 +72,7 @@ class AutoClicker:
                     break
                     
             except Exception as exc:
+                logger.exception("Autoclicker click loop error")
                 console.print(f"✗ Autoclicker error: {exc}", style="red")
                 break
 
@@ -152,6 +153,7 @@ class SnackSpammer:
                         break
                     
             except Exception as exc:
+                logger.exception("SnackSpammer loop error")
                 console.print(f"✗ SnackSpammer error: {exc}", style="red")
                 break
         
@@ -235,6 +237,7 @@ class ArmorSnackSpammer:
                         break
 
             except Exception as exc:
+                logger.exception("ArmorSnackSpammer loop error")
                 console.print(f"✗ ArmorSnackSpammer error: {exc}", style="red")
                 break
 
@@ -298,6 +301,7 @@ class AntiAFK:
                 kbd.release('a')
             console.print("✓ Released all Anti-AFK keys", style="dim")
         except Exception as e:
+            logger.exception("Anti-AFK key release error")
             console.print(f"⚠ Key release error: {e}", style="yellow")
     
     def _hold_keys(self) -> None:
@@ -383,6 +387,7 @@ class AntiAFK:
                 console.print("[red]✗[/red] No keyboard library available", style="red")
                 
         except Exception as e:
+            logger.exception("Anti-AFK loop error")
             console.print(f"[red]✗[/red] Anti-AFK error: {e}", style="red")
             self._release_all_keys()  # 🔥 Cleanup on error too
     

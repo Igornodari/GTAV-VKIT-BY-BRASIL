@@ -4,6 +4,7 @@ import tkinter as tk
 from functools import lru_cache
 from typing import Optional, Tuple
 from core.managers import GameDetector, WindowFocusManager
+from core.logger import logger
 
 # ===== ENHANCED COLOR PALETTE =====
 C_PURE_BLACK = "#000000"
@@ -568,7 +569,8 @@ class OverlayManager:
             # Try to get GTA process name, fall back to default
             gta_process = GameDetector().get_gta_process()
             process_name = gta_process.name() if gta_process else ""
-        except:
+        except Exception:
+            logger.exception("Failed to resolve GTA process name; using default")
             process_name = ""
         
         self.focus_manager = WindowFocusManager()
@@ -617,10 +619,9 @@ class OverlayManager:
             # Update window position if focused
             if is_focused:
                 self._update_overlay_position()
-        except Exception as e:
-            # Log error but don't crash
-            import traceback
-            traceback.print_exc()
+        except Exception:
+            # Log error but don't crash the tkinter main loop.
+            logger.exception("Error handling focus change")
 
     def _get_geometry_string(self, w: int, h: int, x: int, y: int) -> str:
         """OPTIMIZED: Cache geometry strings with size limit"""
@@ -674,7 +675,7 @@ class OverlayManager:
             self.root.geometry(geometry_str)
             self._last_geometry = new_geometry
         except Exception:
-            pass
+            logger.exception("Failed to update overlay position")
 
     def animate_loop(self):
         """OPTIMIZED animation with adaptive frame rate"""
@@ -771,8 +772,8 @@ class OverlayManager:
         if self.notif_timer is not None:
             try:
                 self.root.after_cancel(self.notif_timer)
-            except:
-                pass
+            except Exception:
+                logger.debug("after_cancel failed for notif_timer", exc_info=True)
             self.notif_timer = None
 
         if self.notif_visible:
@@ -828,8 +829,8 @@ class OverlayManager:
             hwnd = win32gui.FindWindow(None, "Grand Theft Auto V")
             if hwnd:
                 return win32gui.GetWindowRect(hwnd)
-        except:
-            pass
+        except Exception:
+            logger.exception("Failed to query GTA window bounds")
         return None
 
     def cleanup(self):
@@ -841,8 +842,8 @@ class OverlayManager:
         if self.notif_timer:
             try:
                 self.root.after_cancel(self.notif_timer)
-            except:
-                pass
+            except Exception:
+                logger.debug("after_cancel failed during cleanup", exc_info=True)
 
         # Clear LRU caches
         ColorUtil.hex_to_rgb.cache_clear()
@@ -853,8 +854,8 @@ class OverlayManager:
         try:
             self.root.quit()
             self.root.destroy()
-        except:
-            pass
+        except Exception:
+            logger.debug("Error tearing down tkinter root", exc_info=True)
 
     def start(self):
         """Start overlay"""

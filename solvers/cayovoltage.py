@@ -4,7 +4,14 @@ import keyboard
 import numpy as np
 from PIL import ImageGrab
 
-from core.logger import console
+from core.logger import console, logger
+
+
+class _SolutionFound(Exception):
+    """Internal control-flow signal: a matching voltage combo was applied,
+    used to break out of the nested search loops. Kept distinct so the
+    handler no longer swallows genuine errors."""
+
 
 DIGITS_LOOKUP = {
     (1, 1, 1, 0, 1, 1, 1): 0,
@@ -80,9 +87,14 @@ def calculate(target_number, left_numbers, right_numbers):
                             time.sleep(0.025)
                         if key == 'return':
                             time.sleep(1.3)
-                    raise NotImplementedError
-    except:
+                    # Solution applied - unwind the nested loops.
+                    raise _SolutionFound
+    except _SolutionFound:
         console.print('[*] END')
+    except Exception:
+        logger.exception('Cayo voltage calculate() failed')
+        console.print('[!] Cayo voltage solver error - see log', style='red')
+        raise
 
 def main(bbox):
     console.print('[*] Cayo Voltage Hack')

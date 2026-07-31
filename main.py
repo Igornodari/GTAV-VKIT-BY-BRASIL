@@ -169,7 +169,7 @@ class SolverManager:
         self.manager.show_notification(name, "Active", "#c084fc")
 
         if bbox := self.manager.get_window_bbox():
-            runtime.thread_pool.submit(solver_func, bbox)
+            runtime.submit(solver_func, bbox)
 
     def casino_fingerprint(self):
         self._run_solver(casinofingerprint.main, "CASINO FINGERPRINT SOLVER 🎰")
@@ -200,7 +200,7 @@ class ExploitManager:
 
         console.print("[cyan]➤[/cyan] Triggering Job Warp exploit...", style="cyan")
         self.manager.show_notification("JOB WARP 🚀", "Exploit triggered", "#c084fc")
-        runtime.thread_pool.submit(jobwarp.main, bbox, self.manager)
+        runtime.submit(jobwarp.main, bbox, self.manager)
 
 
 # ============================================================================
@@ -339,7 +339,7 @@ class HotkeyHandler:
                 self.current_keys.clear()
                 self.triggered.clear()
 
-            runtime.thread_pool.submit(self._restart_listener)
+            runtime.submit(self._restart_listener)
             return
 
         # Stop active tools on unfocus
@@ -439,7 +439,7 @@ class HotkeyHandler:
                     if runtime.debug:
                         print(f"[DEBUG] ✓✓✓ HOTKEY MATCHED: {action}")
 
-                    runtime.thread_pool.submit(self._handle_action, action)
+                    runtime.submit(self._handle_action, action)
 
         except Exception as e:
             logger.exception("Key press error")

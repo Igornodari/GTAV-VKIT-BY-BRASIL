@@ -14,7 +14,7 @@ from rich.table import Table
 from rich.text import Text
 
 from core.state import runtime
-from core.logger import console
+from core.logger import console, logger
 
 
 # ============================================================================
@@ -94,6 +94,7 @@ class UpdateChecker:
                     return self.update_available
 
         except Exception as e:
+            logger.warning("Update check failed", exc_info=True)
             if runtime.debug:
                 print(f"[DEBUG] Update check failed: {e}")
             return False
