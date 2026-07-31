@@ -13,8 +13,7 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
 
-from core.state import runtime
-from core.logger import console
+from core.logger import console, debug
 
 
 # ============================================================================
@@ -43,6 +42,13 @@ HOTKEY_DESCRIPTIONS = [
     ("cayo_fingerprint", "Solver de Impressão Digital do Cayo Perico"),
     ("cayo_voltage", "Solver de Voltagem do Cayo Perico"),
 ]
+
+
+def format_hotkey(hotkey_str: str, empty: str = "") -> str:
+    """Render a hotkey string for display: 'ctrl+f9' -> 'CTRL + F9'."""
+    if not hotkey_str:
+        return empty
+    return " + ".join(p.strip().upper() for p in hotkey_str.split("+"))
 
 
 # ============================================================================
@@ -94,8 +100,7 @@ class UpdateChecker:
                     return self.update_available
 
         except Exception as e:
-            if runtime.debug:
-                print(f"[DEBUG] Update check failed: {e}")
+            debug(f"Update check failed: {e}")
             return False
 
         return False
@@ -141,11 +146,6 @@ class UIManager:
         console.print()
 
     @staticmethod
-    def _format_hotkey(hotkey_str: str) -> str:
-        """Format hotkey string for display."""
-        return ' + '.join(p.strip().upper() for p in hotkey_str.split('+'))
-
-    @staticmethod
     def print_hotkeys(hotkeys: dict):
         """Print hotkeys table."""
         hotkeys_table = Table(
@@ -161,11 +161,7 @@ class UIManager:
                 hotkeys_table.add_row("", "")
                 continue
 
-            hotkey = hotkeys.get(action, "")
-            hotkeys_table.add_row(
-                UIManager._format_hotkey(hotkey) if hotkey else "",
-                description
-            )
+            hotkeys_table.add_row(format_hotkey(hotkeys.get(action, "")), description)
 
         console.print(hotkeys_table)
         console.print()
@@ -176,7 +172,7 @@ class UIManager:
         console.print(Panel(
             "[bold green]●[/bold green] Script em execução... "
             "Pressione [bold red]CTRL+C[/bold red] para sair\n"
-            f"[dim]Pressione {UIManager._format_hotkey(debug_hotkey)} "
+            f"[dim]Pressione {format_hotkey(debug_hotkey)} "
             "para alternar o modo debug[/dim]",
             box=box.HEAVY, border_style="bright_green",
             width=70, padding=(0, 2)

@@ -9,33 +9,27 @@ bug has an actual log file to share.
 """
 
 import logging
-import sys
 from logging.handlers import RotatingFileHandler
-from pathlib import Path
 
 from rich.console import Console
 
-
-def _get_base_dir() -> Path:
-    """Same heuristic as main.get_base_dir(), kept local so this module has
-    no dependency on main.py (would reintroduce a circular import)."""
-    if sys.argv[0].endswith(".exe"):
-        return Path(sys.argv[0]).parent.resolve()
-
-    exe_path = Path(sys.executable).resolve()
-    if "python" not in exe_path.name.lower() and "temp" not in str(exe_path).lower():
-        return exe_path.parent
-
-    return Path(__file__).parent.parent.resolve()
-
+from core.paths import get_base_dir
+from core.state import runtime
 
 console = Console()
+
+
+def debug(message: str) -> None:
+    """Print `message` to the console only while debug mode is on."""
+    if runtime.debug:
+        print(f"[DEBUG] {message}")
+
 
 logger = logging.getLogger("vkit")
 logger.setLevel(logging.DEBUG)
 
 if not logger.handlers:
-    _log_dir = _get_base_dir() / "logs"
+    _log_dir = get_base_dir() / "logs"
     _log_dir.mkdir(parents=True, exist_ok=True)
 
     _handler = RotatingFileHandler(

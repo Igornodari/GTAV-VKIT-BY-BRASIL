@@ -24,7 +24,7 @@ from assets.ui import (
     FONT_SMALL,
 )
 from core.logger import console
-from core.ui import HOTKEY_DESCRIPTIONS
+from core.ui import HOTKEY_DESCRIPTIONS, format_hotkey
 
 MODIFIER_KEYSYMS = {
     "Control_L": "ctrl",
@@ -180,9 +180,14 @@ class SettingsWindow(tk.Toplevel):
 
     @staticmethod
     def _format_combo(hotkey_str: str) -> str:
-        if not hotkey_str:
-            return "—"
-        return " + ".join(p.strip().upper() for p in hotkey_str.split("+"))
+        return format_hotkey(hotkey_str, empty="—")
+
+    def _reset_row(self, action: str):
+        """Restore a row's label to the currently configured combo."""
+        self._row_widgets[action]["combo_label"].config(
+            text=self._format_combo(self.config.hotkeys.get(action, "")),
+            fg=C_GTA_CYAN,
+        )
 
     # ------------------------------------------------------------------
     # Dragging (no OS title bar to drag by)
@@ -259,10 +264,7 @@ class SettingsWindow(tk.Toplevel):
         action = self._capturing_action
         self._capturing_action = None
         self._capture = None
-        self._row_widgets[action]["combo_label"].config(
-            text=self._format_combo(self.config.hotkeys.get(action, "")),
-            fg=C_GTA_CYAN,
-        )
+        self._reset_row(action)
 
     def _on_capture_press(self, event):
         if not self._capturing_action or not self._capture:
@@ -303,10 +305,7 @@ class SettingsWindow(tk.Toplevel):
                     "ação. Escolha outra combinação."
                 )
             )
-            self._row_widgets[action]["combo_label"].config(
-                text=self._format_combo(self.config.hotkeys.get(action, "")),
-                fg=C_GTA_CYAN,
-            )
+            self._reset_row(action)
             return
 
         self.config.hotkeys[action] = combo

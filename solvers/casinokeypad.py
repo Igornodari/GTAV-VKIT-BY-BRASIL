@@ -1,10 +1,10 @@
 import cv2
-import time
 import keyboard
 import numpy as np
-from PIL import ImageGrab
+import time
 
 from core.logger import console
+from solvers.vision import format_moves, grab_screen, play_keys, to_black_and_white
 
 # Casino Keypad specific constants (adjusted from your example)
 DIGITS_LOOKUP = {
@@ -33,10 +33,8 @@ def dot_check(a, img):
 def check_ready(bbox):
     """Wait for ready state (black pixel at specific position)"""
     while True:
-        im = ImageGrab.grab(bbox)
-        screen = im.resize((1920,1080)).crop(tofind)
-        grayImage = cv2.cvtColor(np.array(screen), cv2.COLOR_BGR2GRAY)
-        (thresh, blackAndWhiteImage) = cv2.threshold(grayImage, 215, 255, cv2.THRESH_BINARY)
+        screen = grab_screen(bbox, crop=tofind)
+        blackAndWhiteImage = to_black_and_white(screen, 215, cv2.COLOR_BGR2GRAY)
         crop_img = blackAndWhiteImage[92:92 + 1, 44:44 + 1]
         if np.mean(crop_img) == 0:
             keyboard.press_and_release('w')
@@ -84,8 +82,7 @@ def main(bbox):
     console.print("🔍 [bold cyan]Casino Keypad Solver[/bold cyan]", style="cyan")
 
     # Capture screen
-    im = ImageGrab.grab(bbox)
-    im = im.resize((1920,1080)).crop(tofind)
+    im = grab_screen(bbox, crop=tofind)
 
     # Process image (HSV for cyan detection)
     hsv = cv2.cvtColor(np.array(im), cv2.COLOR_RGB2HSV)
@@ -93,8 +90,7 @@ def main(bbox):
     upper = np.array([96, 255, 255])
     mask = cv2.inRange(hsv, lower, upper)
     mintimg = cv2.bitwise_and(np.array(im), np.array(im), mask=mask)
-    grayImage = cv2.cvtColor(mintimg, cv2.COLOR_RGB2GRAY)
-    (thresh, blackAndWhiteImage) = cv2.threshold(grayImage, 100, 255, cv2.THRESH_BINARY)
+    blackAndWhiteImage = to_black_and_white(mintimg, 100)
 
     try:
         # Detect all 6 numbers
@@ -107,17 +103,10 @@ def main(bbox):
         # Wait for ready and execute
         check_ready(bbox)
         moves = calculate_key_sequence(numbers)
-        move_keys = [k.upper() if k != 'return' else k for k in moves]
-        console.print(f"[yellow]→[/yellow] Solution: [bold cyan]{' → '.join(move_keys)}[/bold cyan]", style="yellow")
-        
-        # Execute keystrokes
-        for key in moves:
-            keyboard.press_and_release(key)
-            if key in ['s', 'w']:
-                time.sleep(0.025)
-            if key == 'return':
-                time.sleep(1.95)
-        
+        console.print(f"[yellow]→[/yellow] Solution: [bold cyan]{format_moves(moves, literal=('return',))}[/bold cyan]", style="yellow")
+
+        play_keys(moves, {'s': 0.025, 'w': 0.025, 'return': 1.95})
+
         console.print("[green]✓[/green] Casino Keypad solved successfully", style="green")
         console.print()
         

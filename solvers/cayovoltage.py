@@ -1,10 +1,7 @@
-import cv2
-import time
-import keyboard
 import numpy as np
-from PIL import ImageGrab
 
 from core.logger import console
+from solvers.vision import grab_screen, play_keys, to_black_and_white
 
 DIGITS_LOOKUP = {
     (1, 1, 1, 0, 1, 1, 1): 0,
@@ -74,12 +71,10 @@ def calculate(target_number, left_numbers, right_numbers):
             for z, x, v, n, k, l in keys:
                 if (target_number == left_numbers[z] * right_numbers[x] + left_numbers[v] * right_numbers[n] + left_numbers[k] * right_numbers[l]):
                     console.print('-', moves[tuple(moves)[i]])
-                    for key in (moves[tuple(moves)[i]]):
-                        keyboard.press_and_release(key)
-                        if key in ('s', 'w', 'enter'):
-                            time.sleep(0.025)
-                        if key == 'return':
-                            time.sleep(1.3)
+                    play_keys(
+                        moves[tuple(moves)[i]],
+                        {'s': 0.025, 'w': 0.025, 'enter': 0.025, 'return': 1.3},
+                    )
                     raise NotImplementedError
     except:
         console.print('[*] END')
@@ -87,12 +82,10 @@ def calculate(target_number, left_numbers, right_numbers):
 def main(bbox):
     console.print('[*] Cayo Voltage Hack')
 
-    im = ImageGrab.grab(bbox)
-    im = im.resize((1920,1080))
+    im = grab_screen(bbox)
 
-    grayImage = cv2.cvtColor(np.array(im), cv2.COLOR_RGB2GRAY)
-    (thresh, blackAndWhiteImage) = cv2.threshold(grayImage, 100, 255, cv2.THRESH_BINARY)
-    
+    blackAndWhiteImage = to_black_and_white(im, 100)
+
     try:
         target_number = (
             (100 * (pixel_check(target_number_length_0, target_number_height, blackAndWhiteImage, DIGITS_LOOKUP)))

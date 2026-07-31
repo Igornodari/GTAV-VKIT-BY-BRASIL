@@ -27,8 +27,9 @@ from core.managers import (
     GameDetector
 )
 from core.ui import UIManager, UpdateChecker
+from core.paths import get_base_dir
 from core.state import runtime
-from core.logger import console, logger
+from core.logger import console, debug, logger
 
 # Constants
 VERSION = "v3.5.2"
@@ -38,18 +39,6 @@ APP_TITLE = "VKit - Toolbox"
 # ============================================================================
 # CONFIGURATION & PATHS
 # ============================================================================
-
-
-def get_base_dir() -> Path:
-    """Get the directory containing the actual .exe or script"""
-    if sys.argv[0].endswith(".exe"):
-        return Path(sys.argv[0]).parent.resolve()
-
-    exe_path = Path(sys.executable).resolve()
-    if "python" not in exe_path.name.lower() and "temp" not in str(exe_path).lower():
-        return exe_path.parent
-
-    return Path(__file__).parent.resolve()
 
 
 BASE_DIR = get_base_dir()
@@ -286,9 +275,8 @@ class HotkeyHandler:
             for action, hotkey_str in config.hotkeys.items()
         }
 
-        if runtime.debug:
-            for action, combo in self.hotkeys.items():
-                print(f"[DEBUG] Parsed {action}: {combo}")
+        for action, combo in self.hotkeys.items():
+            debug(f"Parsed {action}: {combo}")
 
     @staticmethod
     def _parse_hotkey(hotkey_str: str) -> frozenset:
@@ -332,8 +320,7 @@ class HotkeyHandler:
     def _on_focus_change(self, is_focused: bool):
         """Handle focus change - stop tools on unfocus"""
         if is_focused:
-            if runtime.debug:
-                print("[DEBUG] GTA regained focus - restarting listener...")
+            debug("GTA regained focus - restarting listener...")
 
             with self._lock:
                 self.current_keys.clear()
@@ -368,8 +355,7 @@ class HotkeyHandler:
                 "AUTO-STOPPED", f"Tools paused: {tools_str}", "#f59e0b"
             )
 
-            if runtime.debug:
-                print(f"[DEBUG] Focus lost - Stopped: {tools_str}")
+            debug(f"Focus lost - Stopped: {tools_str}")
 
     def _restart_listener(self):
         """Restart listener + force focus refresh"""
@@ -379,12 +365,10 @@ class HotkeyHandler:
                 if self._listener is not None:
                     try:
                         self._listener.stop()
-                        if runtime.debug:
-                            print("[DEBUG] Stopped old listener")
+                        debug("Stopped old listener")
                     except Exception as e:
                         logger.exception("Error stopping listener")
-                        if runtime.debug:
-                            print(f"[DEBUG] Error stopping listener: {e}")
+                        debug(f"Error stopping listener: {e}")
 
                 time.sleep(0.2)
 
@@ -394,20 +378,17 @@ class HotkeyHandler:
                 )
                 self._listener.start()
 
-                if runtime.debug:
-                    print("[DEBUG] ✓ Listener restarted")
+                debug("✓ Listener restarted")
 
             # Force refresh focus state after restart
             time.sleep(0.1)
             is_focused = self.focus_manager.force_refresh_focus_state()
 
-            if runtime.debug:
-                print(f"[DEBUG] Focus state after restart: {is_focused}")
+            debug(f"Focus state after restart: {is_focused}")
 
         except Exception as e:
             logger.exception("Failed to restart listener")
-            if runtime.debug:
-                print(f"[DEBUG] Failed to restart listener: {e}")
+            debug(f"Failed to restart listener: {e}")
 
     def on_press(self, key):
         """Handle key press"""
@@ -436,15 +417,13 @@ class HotkeyHandler:
                     action, combo = max(matches, key=lambda x: len(x[1]))
                     self.triggered.add(action)
 
-                    if runtime.debug:
-                        print(f"[DEBUG] ✓✓✓ HOTKEY MATCHED: {action}")
+                    debug(f"✓✓✓ HOTKEY MATCHED: {action}")
 
                     runtime.thread_pool.submit(self._handle_action, action)
 
         except Exception as e:
             logger.exception("Key press error")
-            if runtime.debug:
-                print(f"[DEBUG] Key press error: {e}")
+            debug(f"Key press error: {e}")
 
     def on_release(self, key):
         """Handle key release"""
@@ -465,13 +444,12 @@ class HotkeyHandler:
                 for action in to_clear:
                     self.triggered.discard(action)
 
-                if runtime.debug and to_clear:
-                    print(f"[DEBUG]   Cleared combos: {to_clear}")
+                if to_clear:
+                    debug(f"  Cleared combos: {to_clear}")
 
         except Exception as e:
             logger.exception("Key release error")
-            if runtime.debug:
-                print(f"[DEBUG] Key release error: {e}")
+            debug(f"Key release error: {e}")
 
     def _handle_action(self, action: str):
         """Route action to appropriate handler"""
@@ -509,8 +487,7 @@ class HotkeyHandler:
                 handler()
             except Exception as e:
                 logger.exception("Action handler error (%s)", action)
-                if runtime.debug:
-                    print(f"[DEBUG] Action handler error: {e}")
+                debug(f"Action handler error: {e}")
 
     def _toggle_overlay(self):
         """Toggle overlay mode"""
@@ -564,8 +541,7 @@ class HotkeyHandler:
 
     def start_listening(self):
         """Start keyboard listener"""
-        if runtime.debug:
-            print("[DEBUG] Starting initial keyboard listener...")
+        debug("Starting initial keyboard listener...")
 
         try:
             with self._listener_lock:
@@ -574,8 +550,7 @@ class HotkeyHandler:
                 )
                 self._listener.start()
 
-            if runtime.debug:
-                print("[DEBUG] ✓ Listener started")
+            debug("✓ Listener started")
 
             while self._should_run:
                 time.sleep(1)
@@ -629,13 +604,11 @@ def disable_console_quickedit():
 
         kernel32.SetConsoleMode(h_console, new_mode)
 
-        if runtime.debug:
-            print(f"[DEBUG] Console mode changed: {mode.value:04x} -> {new_mode:04x}")
+        debug(f"Console mode changed: {mode.value:04x} -> {new_mode:04x}")
 
     except Exception as e:
         logger.exception("Failed to disable QuickEdit")
-        if runtime.debug:
-            print(f"[DEBUG] Failed to disable QuickEdit: {e}")
+        debug(f"Failed to disable QuickEdit: {e}")
 
 
 def global_exception_handler(exc_type, exc_value, exc_traceback):

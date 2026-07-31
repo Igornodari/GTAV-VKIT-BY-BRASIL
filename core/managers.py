@@ -7,7 +7,6 @@ sound effects, firewall rules, and process operations.
 
 import ctypes
 import socket
-import subprocess
 import sys
 import threading
 import time
@@ -20,7 +19,8 @@ import win32gui
 import win32process
 
 from core.state import runtime
-from core.logger import console
+from core.logger import console, debug
+from core.shell import run_hidden
 
 class GameDetector:
     def __init__(self, process_prefix: str = "GTA5", poll_interval: float = 0.5, timeout: Optional[float] = None):
@@ -127,8 +127,7 @@ class WindowFocusManager:
                     runtime.thread_pool.submit(self._safe_callback, callback, is_gta)
 
         except Exception as e:
-            if runtime.debug:
-                print(f"[DEBUG] Focus hook error: {e}")
+            debug(f"Focus hook error: {e}")
 
     @staticmethod
     def _safe_callback(callback: Callable, is_focused: bool):
@@ -136,8 +135,7 @@ class WindowFocusManager:
         try:
             callback(is_focused)
         except Exception as e:
-            if runtime.debug:
-                print(f"[DEBUG] Focus callback error: {e}")
+            debug(f"Focus callback error: {e}")
 
     def register_focus_callback(self, callback: Callable):
         """Register focus change callback."""
@@ -157,8 +155,7 @@ class WindowFocusManager:
             old_state = self._is_focused
             self._is_focused = is_gta
 
-            if runtime.debug:
-                print(f"[DEBUG] Force refresh: focus={is_gta} (was {old_state})")
+            debug(f"Force refresh: focus={is_gta} (was {old_state})")
 
             # Trigger callbacks if state changed
             if is_gta != old_state:
@@ -167,8 +164,7 @@ class WindowFocusManager:
 
             return is_gta
         except Exception as e:
-            if runtime.debug:
-                print(f"[DEBUG] Force refresh error: {e}")
+            debug(f"Force refresh error: {e}")
             return self._is_focused
 
     def start_monitoring(self):
@@ -185,8 +181,7 @@ class WindowFocusManager:
                 if not self._hook_id:
                     raise RuntimeError("Failed to set Windows event hook")
 
-                if runtime.debug:
-                    print("[DEBUG] ✓ Windows event hook installed")
+                debug("✓ Windows event hook installed")
 
                 # Check initial state
                 try:
@@ -206,8 +201,7 @@ class WindowFocusManager:
                         self._shutdown.wait(0.1)
 
             except Exception as e:
-                if runtime.debug:
-                    print(f"[DEBUG] Hook thread error: {e}")
+                debug(f"Hook thread error: {e}")
             finally:
                 if self._hook_id:
                     user32.UnhookWinEvent(self._hook_id)
@@ -283,7 +277,7 @@ class FirewallManager:
             f"if ($null -eq $rule) {{ exit 1 }} else {{ exit 0 }}"
         )
 
-        result = subprocess.run(
+        result = run_hidden(
             [
                 "powershell.exe",
                 "-NoProfile",
@@ -292,9 +286,7 @@ class FirewallManager:
                 command,
             ],
             shell=False,
-            capture_output=True,
             text=True,
-            creationflags=subprocess.CREATE_NO_WINDOW,
         )
 
         return result.returncode == 0
@@ -318,30 +310,21 @@ class FirewallManager:
         one layer below the firewall, so it keeps working even when that
         happens.
         """
-        result = subprocess.run(
-            f'route add {self.remote_ip} mask 255.255.255.255 0.0.0.0',
-            shell=True, capture_output=True, text=True,
-            creationflags=subprocess.CREATE_NO_WINDOW
+        result = run_hidden(
+            f'route add {self.remote_ip} mask 255.255.255.255 0.0.0.0', text=True
         )
-        if runtime.debug:
-            print(f"[DEBUG] route add {self.remote_ip}: {result.stdout.strip() or result.stderr.strip()}")
+        debug(f"route add {self.remote_ip}: {result.stdout.strip() or result.stderr.strip()}")
 
     def _delete_null_route(self):
         """Remove the null route added by _add_null_route (best effort)."""
-        result = subprocess.run(
-            f'route delete {self.remote_ip}',
-            shell=True, capture_output=True, text=True,
-            creationflags=subprocess.CREATE_NO_WINDOW
-        )
-        if runtime.debug:
-            print(f"[DEBUG] route delete {self.remote_ip}: {result.stdout.strip() or result.stderr.strip()}")
+        result = run_hidden(f'route delete {self.remote_ip}', text=True)
+        debug(f"route delete {self.remote_ip}: {result.stdout.strip() or result.stderr.strip()}")
 
     def add_rule(self, manager, sound_manager):
         """Add firewall blocking rule."""
-        subprocess.run(
+        run_hidden(
             f'netsh advfirewall firewall add rule name="{self.rule_name}" '
-            f'dir=out action=block remoteip="{self.remote_ip}"',
-            shell=True, capture_output=True, creationflags=subprocess.CREATE_NO_WINDOW
+            f'dir=out action=block remoteip="{self.remote_ip}"'
         )
         self._add_null_route()
 
@@ -363,10 +346,7 @@ class FirewallManager:
 
     def delete_rule(self, manager, sound_manager):
         """Remove firewall blocking rule."""
-        subprocess.run(
-            f'netsh advfirewall firewall delete rule name="{self.rule_name}"',
-            shell=True, capture_output=True, creationflags=subprocess.CREATE_NO_WINDOW
-        )
+        run_hidden(f'netsh advfirewall firewall delete rule name="{self.rule_name}"')
         self._delete_null_route()
 
         time.sleep(0.5)
@@ -397,10 +377,7 @@ class FirewallManager:
         self._delete_null_route()
 
         if self.rule_exists():
-            subprocess.run(
-                f'netsh advfirewall firewall delete rule name="{self.rule_name}"',
-                shell=True, capture_output=True, creationflags=subprocess.CREATE_NO_WINDOW
-            )
+            run_hidden(f'netsh advfirewall firewall delete rule name="{self.rule_name}"')
             return True
         return False
 
@@ -445,11 +422,7 @@ class ProcessManager:
     def kill_process(process_name: str, manager):
         """Kill a process by name."""
         try:
-            result = subprocess.run(
-                f'taskkill /F /IM {process_name}',
-                shell=True, capture_output=True, text=True,
-                creationflags=subprocess.CREATE_NO_WINDOW
-            )
+            result = run_hidden(f'taskkill /F /IM {process_name}', text=True)
 
             if result.returncode == 0:
                 console.print(f"✓ {process_name} process [bold red]KILLED[/bold red]", style="green")

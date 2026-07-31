@@ -1,10 +1,8 @@
 import cv2
-import time
-import keyboard
 import numpy as np
-from PIL import ImageGrab
 
 from core.logger import console
+from solvers.vision import grab_screen, play_keys, scaled_gray, to_gray
 
 targets = [(907, 331, 1562, 431), # split the big digit in 8 parts
 (907, 404, 1562, 504),
@@ -36,19 +34,15 @@ def index(part, parts):
 
 def main(bbox):
     console.print('[*] Cayo Perico Fingerprint')
-    im = ImageGrab.grab(bbox)
-    im = im.resize((1920,1080))
+    im = grab_screen(bbox)
 
-    parts = []
-    for target in targets:
-        part = im.crop(target)
-        # resize the big part and store it
-        parts.append(cv2.cvtColor(np.array(part.resize((round(part.size[0] * 0.91), round(part.size[1] * 0.91)))), cv2.COLOR_BGR2GRAY))
+    # resize the big parts and store them
+    parts = [scaled_gray(im.crop(target), 0.91) for target in targets]
 
     moves = []
     for i in range(len(scan)):
         # get the index of the litle part on  the left
-        j = index(cv2.cvtColor(np.array(im.crop(scan[i])), cv2.COLOR_BGR2GRAY), parts)
+        j = index(to_gray(im.crop(scan[i]), cv2.COLOR_BGR2GRAY), parts)
 
         path = min(i - j, i - j - 8, i - j + 8, key = abs)
         if path != 0:
@@ -63,9 +57,7 @@ def main(bbox):
 
     console.print('-', moves)
 
-    for key in moves:
-        keyboard.press_and_release(key)
-        time.sleep(0.025)
+    play_keys(moves, 0.025)
 
     console.print('[*] END')
     console.print('=============================================')

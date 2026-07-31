@@ -1,11 +1,9 @@
 import cv2
-import time
-import keyboard
 import numpy as np
-from PIL import ImageGrab
 from collections import deque, namedtuple
 
 from core.logger import console
+from solvers.vision import format_moves, grab_screen, play_keys, scaled_gray
 
 tofind = (950, 155, 1335, 685)
 
@@ -100,13 +98,9 @@ def main(bbox):
     console.print("🔍 [bold cyan]Casino Fingerprint Solver[/bold cyan]", style="cyan")
     
     # Capture and process screen
-    im = ImageGrab.grab(bbox)
-    im = im.resize((1920, 1080))
+    im = grab_screen(bbox)
     sub0_ = im.crop(tofind)
-    sub0 = cv2.cvtColor(
-        np.array(sub0_.resize((round(sub0_.size[0] * 0.77), round(sub0_.size[1] * 0.77)))), 
-        cv2.COLOR_BGR2GRAY
-    )
+    sub0 = scaled_gray(sub0_, 0.77)
 
     # Find matching fingerprint locations
     togo = [part[1] for part in parts if is_in(sub0, im.crop(part[0]))]
@@ -124,13 +118,9 @@ def main(bbox):
     moves = find_shortest_solution(togo)
     
     # Display solution
-    move_keys = [k.upper() if k != 'return' and k != 'tab' else k for k in moves]
-    console.print(f"[yellow]→[/yellow] Solution: [bold cyan]{' → '.join(move_keys)}[/bold cyan]", style="yellow")
-    
-    # Execute keystrokes
-    for key in moves:
-        keyboard.press_and_release(key)
-        time.sleep(0.03)
-    
+    console.print(f"[yellow]→[/yellow] Solution: [bold cyan]{format_moves(moves)}[/bold cyan]", style="yellow")
+
+    play_keys(moves, 0.03)
+
     console.print("[green]✓[/green] Casino Fingerprint solved successfully", style="green")
     console.print()
