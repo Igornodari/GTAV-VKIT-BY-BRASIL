@@ -34,7 +34,7 @@ from core.state import runtime
 from core.logger import console, logger
 
 # Constants
-VERSION = "v3.5.2"
+VERSION = "v3.5.3"
 APP_TITLE = "VKit - Toolbox"
 
 
