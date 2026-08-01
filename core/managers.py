@@ -370,13 +370,14 @@ class FirewallManager:
 
     def add_rule(self, manager, sound_manager):
         """Add firewall blocking rule."""
-        subprocess.run(
+        result = subprocess.run(
             [
                 'netsh', 'advfirewall', 'firewall', 'add', 'rule',
                 f'name={self.rule_name}', 'dir=out', 'action=block',
                 f'remoteip={self.remote_ip}',
             ],
-            shell=False, capture_output=True, creationflags=subprocess.CREATE_NO_WINDOW
+            shell=False, capture_output=True, text=True,
+            creationflags=subprocess.CREATE_NO_WINDOW
         )
         self._add_null_route()
 
@@ -394,6 +395,14 @@ class FirewallManager:
                 )
         else:
             console.print("✗ Failed to add firewall rule", style="red")
+            reason = (result.stderr or result.stdout or "").strip()
+            if reason:
+                console.print(f"  [dim]netsh: {reason}[/dim]", style="red")
+            console.print(
+                "  [dim]Verifique se o serviço 'Windows Defender Firewall' "
+                "está em execução (services.msc) ou se outro antivírus "
+                "assumiu o firewall.[/dim]"
+            )
         console.print()
 
     def delete_rule(self, manager, sound_manager):

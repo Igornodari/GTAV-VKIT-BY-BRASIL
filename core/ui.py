@@ -33,6 +33,7 @@ HOTKEY_DESCRIPTIONS = [
     ("autoclicker", "⚡ Alternar Autoclicker Rápido (70 CPS)"),
     ("snack_spammer", "🍔 Alternar Spam de Comida (Segure TAB)"),
     ("armor_snack_combo", "🎽 Alternar Colete + Comida (Segure TAB)"),
+    ("flight_autopilot", "✈️ Alternar Piloto Automático (nivela o avião)"),
     ("anti_afk", "🎮 Alternar Anti-AFK (S+A ↔ S+D)"),
     ("kill_gta", "💀 Encerrar Processo do GTA V (Instantâneo)"),
     (None, None),

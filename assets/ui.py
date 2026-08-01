@@ -4,6 +4,7 @@ import tkinter as tk
 from functools import lru_cache
 from typing import Optional, Tuple
 from core.managers import GameDetector, WindowFocusManager
+from core.state import runtime
 
 # ===== ENHANCED COLOR PALETTE =====
 C_PURE_BLACK = "#000000"
@@ -820,16 +821,37 @@ class OverlayManager:
 
         self.root.update_idletasks()
 
+    GTA_TITLE_MARKERS = ("grand theft auto v", "gta5", "rockstar games")
+
     @staticmethod
     def get_window_bbox() -> Optional[Tuple[int, int, int, int]]:
-        """Get GTA window bounds"""
+        """Get GTA window bounds.
+
+        Matches any visible top-level window whose title identifies it as
+        GTA V (case-insensitive, substring) instead of an exact-title
+        FindWindow lookup - mirrors WindowFocusManager's detection so a
+        launcher/overlay adding text to the title bar can't make this
+        silently fail to find the game.
+        """
         try:
             import win32gui
-            hwnd = win32gui.FindWindow(None, "Grand Theft Auto V")
-            if hwnd:
-                return win32gui.GetWindowRect(hwnd)
-        except:
-            pass
+
+            found = []
+
+            def _on_window(hwnd, _):
+                if win32gui.IsWindowVisible(hwnd):
+                    title = win32gui.GetWindowText(hwnd).lower()
+                    if any(marker in title for marker in OverlayManager.GTA_TITLE_MARKERS):
+                        found.append(hwnd)
+
+            win32gui.EnumWindows(_on_window, None)
+
+            if found:
+                return win32gui.GetWindowRect(found[0])
+        except Exception as e:
+            if runtime.debug:
+                print(f"[DEBUG] get_window_bbox error: {e}")
+
         return None
 
     def cleanup(self):
