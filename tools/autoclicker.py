@@ -192,6 +192,78 @@ class SnackSpammer:
             self.start()
 
 
+class FlightAutoLevel:
+    """Toggleable plane trim assist: while active, briefly taps 'S' (pitch
+    up) every `correction_interval` seconds so the nose doesn't keep
+    drifting down - no more manually nudging it back level yourself."""
+
+    def __init__(self, sound_manager, correction_interval: float = 5.0, tap_duration: float = 7.0) -> None:
+        self.active = False
+        self.thread: threading.Thread | None = None
+        self.sound_manager = sound_manager
+        self.correction_interval = correction_interval
+        self.tap_duration = tap_duration
+        self.stop_event = threading.Event()
+
+        if not KEYBOARD_AVAILABLE:
+            console.print("[yellow]⚠[/yellow] keyboard module not available for FlightAutoLevel", style="dim")
+
+    def _loop(self) -> None:
+        console.print(
+            f"✈️ Piloto Automático [bold green]STARTED[/bold green] "
+            f"(nivela a cada {self.correction_interval:.0f}s)", style="green"
+        )
+
+        corrections = 0
+        while self.active and not self.stop_event.is_set():
+            if self.stop_event.wait(timeout=self.correction_interval):
+                break
+
+            try:
+                keyboard.press('s')
+                if self.stop_event.wait(timeout=self.tap_duration):
+                    keyboard.release('s')
+                    break
+                keyboard.release('s')
+                corrections += 1
+            except Exception as exc:
+                console.print(f"✗ FlightAutoLevel error: {exc}", style="red")
+                break
+
+        console.print(f"✈️ Piloto Automático [bold red]STOPPED[/bold red] ([cyan]{corrections}[/cyan] correções)", style="green")
+        console.print()
+
+    def start(self) -> None:
+        if not KEYBOARD_AVAILABLE:
+            console.print("[red]✗[/red] keyboard module required for Piloto Automático", style="red")
+            return
+
+        if self.active:
+            return
+
+        self.active = True
+        self.stop_event.clear()
+        self.thread = threading.Thread(target=self._loop, daemon=True)
+        self.thread.start()
+        self.sound_manager.play_on()
+
+    def stop(self) -> None:
+        if not self.active:
+            return
+
+        self.active = False
+        self.stop_event.set()
+        if self.thread and self.thread.is_alive():
+            self.thread.join(timeout=1.0)
+        self.sound_manager.play_off()
+
+    def toggle(self) -> None:
+        if self.active:
+            self.stop()
+        else:
+            self.start()
+
+
 class ArmorSnackSpammer:
     """Toggleable combo: while active and TAB is held, alternately spams
     'v' (colete) and 'c' (comida) so both use-bars fill on their own -

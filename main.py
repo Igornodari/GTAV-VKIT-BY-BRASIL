@@ -15,7 +15,7 @@ from pynput import keyboard
 # Local application imports
 from assets.ui import  OverlayManager
 from assets.settings_window import SettingsWindow
-from tools.autoclicker import AutoClicker, SnackSpammer, AntiAFK, ArmorSnackSpammer
+from tools.autoclicker import AutoClicker, SnackSpammer, AntiAFK, ArmorSnackSpammer, FlightAutoLevel
 from solvers import casinofingerprint, casinokeypad, cayofingerprint, cayovoltage
 from exploits import jobwarp
 
@@ -93,6 +93,7 @@ class AppConfig:
         hotkeys = config["hotkeys"]
         hotkeys.setdefault("open_settings", "ctrl+f7")
         hotkeys.setdefault("armor_snack_combo", "ctrl+x")
+        hotkeys.setdefault("flight_autopilot", "ctrl+p")
 
         return cls(
             rule_name=validate_rule_name(fw["rule_name"]),
@@ -141,6 +142,7 @@ class AppConfig:
                 "kill_gta": "ctrl+shift+q",
                 "open_settings": "ctrl+f7",
                 "armor_snack_combo": "ctrl+x",
+                "flight_autopilot": "ctrl+p",
                 "casino_fingerprint": "f5",
                 "casino_keypad": "f6",
                 "cayo_fingerprint": "ctrl+f5",
@@ -168,11 +170,16 @@ class SolverManager:
 
     def _run_solver(self, solver_func: Callable, name: str):
         """Generic solver runner"""
+        if not (bbox := self.manager.get_window_bbox()):
+            console.print(f"[red]✗[/red] {name}: janela do GTA V não encontrada", style="red")
+            self.manager.show_notification(
+                "ERRO", "Janela do GTA V não detectada", "#FF3B5C"
+            )
+            return
+
         console.print(f"[cyan]➤[/cyan] Running {name}...", style="cyan")
         self.manager.show_notification(name, "Active", "#c084fc")
-
-        if bbox := self.manager.get_window_bbox():
-            runtime.thread_pool.submit(solver_func, bbox)
+        runtime.thread_pool.submit(solver_func, bbox)
 
     def casino_fingerprint(self):
         self._run_solver(casinofingerprint.main, "CASINO FINGERPRINT SOLVER 🎰")
@@ -249,6 +256,7 @@ class HotkeyHandler:
         snack_spammer: SnackSpammer,
         anti_afk: AntiAFK,
         armor_snack_spammer: ArmorSnackSpammer,
+        flight_autopilot: FlightAutoLevel,
         solver_manager: SolverManager,
         exploit_manager: ExploitManager,
         settings_window=None,
@@ -262,6 +270,7 @@ class HotkeyHandler:
         self.snack_spammer = snack_spammer
         self.anti_afk = anti_afk
         self.armor_snack_spammer = armor_snack_spammer
+        self.flight_autopilot = flight_autopilot
         self.solver_manager = solver_manager
         self.exploit_manager = exploit_manager
         self.settings_window = settings_window
@@ -351,6 +360,7 @@ class HotkeyHandler:
             (self.snack_spammer, "Snack Spammer"),
             (self.anti_afk, "Anti-AFK"),
             (self.armor_snack_spammer, "Colete + Comida"),
+            (self.flight_autopilot, "Piloto Automático"),
         ]
 
         stopped = [
@@ -488,6 +498,9 @@ class HotkeyHandler:
             "armor_snack_combo": lambda: self._toggle_tool(
                 self.armor_snack_spammer, "COLETE + COMIDA 🎽", " (Segure TAB)"
             ),
+            "flight_autopilot": lambda: self._toggle_tool(
+                self.flight_autopilot, "PILOTO AUTOMÁTICO ✈️", " (S por 7s a cada 5s)"
+            ),
             "autoclicker": lambda: self._toggle_tool(
                 self.autoclicker, "AUTO CLICKER ⚡"
             ),
@@ -596,9 +609,9 @@ class HotkeyHandler:
 # ============================================================================
 
 
-def cleanup(autoclicker, snack_spammer, anti_afk, armor_snack_spammer, firewall_manager):
+def cleanup(autoclicker, snack_spammer, anti_afk, armor_snack_spammer, flight_autopilot, firewall_manager):
     """Cleanup resources on exit"""
-    for tool in (autoclicker, snack_spammer, anti_afk, armor_snack_spammer):
+    for tool in (autoclicker, snack_spammer, anti_afk, armor_snack_spammer, flight_autopilot):
         if tool.active:
             tool.stop()
 
@@ -688,6 +701,7 @@ def main():
     snack_spammer = SnackSpammer(sound_manager)
     anti_afk = AntiAFK(sound_manager)
     armor_snack_spammer = ArmorSnackSpammer(sound_manager)
+    flight_autopilot = FlightAutoLevel(sound_manager)
 
     # Initialize feature managers
     solver_manager = SolverManager(overlay_manager)
@@ -723,6 +737,7 @@ def main():
         snack_spammer,
         anti_afk,
         armor_snack_spammer,
+        flight_autopilot,
         solver_manager,
         exploit_manager,
         settings_window=settings_window,
@@ -731,7 +746,8 @@ def main():
 
     # Register cleanup
     atexit.register(
-        cleanup, autoclicker, snack_spammer, anti_afk, armor_snack_spammer, firewall_manager
+        cleanup, autoclicker, snack_spammer, anti_afk, armor_snack_spammer,
+        flight_autopilot, firewall_manager
     )
 
     # Start listener thread
